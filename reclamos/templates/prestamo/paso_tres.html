@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% load bootstrap %}
+
+{% block titulo %}
+{% endblock %}
+
+{% block contenido %}
+<link rel="stylesheet" href="{% static 'css/custom.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/select2/select2.min.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/select2/select2-bootstrap.min.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/bootstrap-datepicker/css/bootstrap-datepicker.css' %}">
+
+<script src="{% static 'plugins/bootstrap-datepicker/js/bootstrap-datepicker.js' %}"></script>
+<script src="{% static 'plugins/bootstrap-datepicker/locales/bootstrap-datepicker.es.min.js' %}"></script>
+<script src="{% static 'plugins/select2/select2.min.js' %}"></script>
+
+<style type="text/css">
+   label{
+      font-weight: normal !important;
+   }
+</style>
+
+<div class="loader"></div>
+
+<!-- RESPUESTA DEL CLIENTE -->
+<div class="box box-success">
+   <div class="box-header with-border">
+      <h3 class="box-title">Reclamo Cliente </h3>
+      <a href="{% url 'prestamo_paso_dos' categoria reclamo id cuenta %}" class="pull-right"> << Atras {{request.GET.id}}</a>
+   </div>
+   <div class="box-body">
+      <form method="post" class="form-horizontal" accept-charset="utf-8" id="formulario-direccion">
+         {% csrf_token %}
+
+         <label><b>Identidad:</b> {{request.session.persona.0.identidad}} </label> <br>
+         <label><b>Codigo Cliente:</b> {{request.session.persona.0.cliente_interno}} </label> <br>
+         <label><b>Nombre Cliente:</b> {{request.session.persona.0.nombre}} </label> <br>
+         <label><b>N. Transaccion:</b> {{request.session.transaccion.0}} </label>
+
+         <div class="row">
+            <div class="col-sm-12">
+               <br> <b> Correo Electronico: </b> <br>
+               <input type="text" name="correo" value="{{cliente.correo_electronico}}" class="form-control" required>
+            </div>
+         </div>
+         <div class="row">
+            <div class="col-sm-12">
+                  <label><b>Detalle del Reclamo:</b></label> <br>
+                  <textarea name="reclamo" class="form-control" rows="10" width="100%"></textarea>
+            </div>
+         </div>
+
+         <br>
+         <button id="guardar" type="submit" class="btn btn-success" id='btn-actualizar'>Ingresar Reclamo</button>
+         <br>
+      </form>
+      <br>
+      <br>
+   </div>
+</div>
+<!--........................................................................................ -->
+
+<script>
+   $('.cuenta').click(function(event) {
+      $('#id_cuenta').val($(this).attr('data-cuenta'))
+      return true
+   });
+
+   $('.fecha').datepicker({
+      autoclose: true,
+      format: 'yyyy-mm-dd',
+      language: 'es',
+      todayHighlight: true,
+   })
+
+   $('.fecha').change(function(){
+      $( ".fecha" ).each(function( index ) {
+         $( this ).prop('required', true)
+      });
+   })
+
+   function recargar(){
+      localStorage.clear();
+      location.href = location.href;
+   }
+
+   $('#filtro').click(function(event) {
+      $('#metodo').val('filtro')
+   });
+
+   $('#reclamo').click(function(event) {
+      $('#metodo').val('reclamo')
+   });
+
+
+   $('#tabla tbody tr, .checkbox').click(function(){
+      item = $(this).closest("tr").find(".checkbox").prop('checked')
+      if (item == true){
+          $(this).closest("tr").find(".checkbox").prop('checked', false)
+      }else{
+          $(this).closest("tr").find(".checkbox").prop('checked', true)
+      }
+
+      x = 0
+      $('.checkbox').each(function(){
+         if ($(this).prop('checked') == true){
+            x++
+         }
+      })
+
+      if (x > 2){
+         $('#error').show()
+         $('#reclamo').attr('disabled', true)
+      } else if (x == 0){
+         $('#reclamo').attr('disabled', true)
+      }else{
+         $('#error').hide()
+         $('#reclamo').attr('disabled', false)
+      }
+
+   })
+
+
+   
+</script>
+
+{% endblock %}

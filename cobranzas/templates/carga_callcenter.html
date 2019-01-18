@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% load bootstrap %}
+
+{% block titulo-llamada %}
+   {% include 'conteo_llamadas.html' %}
+{% endblock %}
+
+{% block contenido %}
+<link rel="stylesheet" href="{% static 'css/custom.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/select2/select2.min.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/select2/select2-bootstrap.min.css' %}">
+<script src="{% static 'plugins/select2/select2.min.js' %}"></script>
+
+<link rel="stylesheet" href="{% static 'plugins/bootstrap-datepicker/css/bootstrap-datepicker.css' %}">
+<script src="{% static 'plugins/bootstrap-datepicker/js/bootstrap-datepicker.js' %}"></script>
+<script src="{% static 'plugins/bootstrap-datepicker/locales/bootstrap-datepicker.es.min.js' %}"></script>
+
+
+<div class="box box-success">
+  <div class="box-header with-border">
+     <h3 class="box-title">Busqueda de Agente</h3>
+  </div>
+  <div class="box-body">
+  <form method="POST">
+    {% csrf_token %}
+    <div class="col-sm-12">
+      <div class="bs-callout bs-callout-warning" role="alert">
+          Por favor tomar en cuenta lo siguiente:
+          <b>
+          <ul>
+            <li> La carga se realizará con la fecha / días de mora seleccionada. </li>
+            <li> Los operadores tendran una carga diferente cada vez que se ejecute la tarea. </li>
+            <li> Los clientes llamados en los ultimos 4 dias son excluidos de la carga. </li>
+          </ul>
+          </b>
+      </div>
+      <br><br>
+
+
+      <div class="row form-group">
+        <div class=" col-md-3">
+          <label for="inputEmail3" class="col-xs-4 control-label">Cartera </label>
+          <div class="col-sm-8">
+            <select name="cartera" required id="cartera">
+              <option value=""> ----------- </option>
+              <option value="1"> Bancon </option>
+              <option value="2"> Banrural </option>
+              <option value="3" > Premora </option>
+            </select>
+          </div>
+        </div>
+
+
+        <div class=" col-md-3">
+          <label for="inputEmail3" class="col-xs-4 control-label">Fecha </label>
+          <div class="col-sm-8">
+            <input type="text" name="fecha" class="form-control" id='fecha' placeholder="2017-06-01" readonly>
+          </div>
+        </div>
+      </div> 
+
+      <div class="row form-group">
+
+        <div class=" col-md-3">
+          <label for="inputEmail3" class="col-xs-4 control-label">Mora Desde </label>
+          <div class="col-sm-8">
+            <input type="number" step="1" name="mora_desde" class="form-control" id='mora_desde' placeholder="15" readonly>
+          </div>
+        </div>
+
+        <div class=" col-md-3">
+          <label for="inputEmail3" class="col-xs-4 control-label">Mora Hasta </label>
+          <div class="col-sm-8">
+            <input type="number" step="1" name="mora_hasta" class="form-control" id='mora_hasta' placeholder="60" readonly>
+          </div>
+        </div>
+      </div> 
+
+
+     <!--  <div class="row form-group">
+        <div class=" col-md-6">
+          {{formulario.producto|bootstrap_horizontal:'col-xs-2' }}
+        </div>
+      </div>  -->
+
+
+
+
+      <button type="submit" class="btn btn-primary">Realizar la Carga</button><br>
+
+      <br>
+      <br>
+
+      {% if mensaje == 'error' %}
+        <span class="label label-danger"  id='error_fecha'>Ocurrio un error al realizar la carga</span>
+      {% elif mensaje == 'exito' %}
+        <span class="label label-success"  id='error_fecha'>Se realizo bien la carga</span>
+      {% endif %}
+    </div>
+  </form>
+     
+  </div>
+</div>
+
+<script type="text/javascript">
+  $('#fecha').datepicker({
+    autoclose: true,
+    format: 'yyyy-mm-dd',
+    language: 'es',
+    todayHighlight: true,
+    orientation: "bottom right"
+  })
+
+  $('select, #id_producto').select2({
+      theme : 'bootstrap',
+      width : '100%'
+   });
+
+  $('#cartera').change(function(){
+
+    if($(this).val() == 3 ){
+      $('#fecha').prop({'readonly': false, 'required':true });
+      $('#mora_hasta, #mora_desde').prop({'readonly': true, 'required': false});
+    }else{
+      $('#fecha').prop({'readonly': true, 'required':false });
+      $('#mora_hasta, #mora_desde').prop({'readonly': false, 'required': true});
+    }
+    console.log($(this).val())
+  })
+</script>
+{% endblock %}

@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% load bootstrap %}
+
+{% block titulo %}
+{% endblock %}
+
+{% block contenido %}
+<link rel="stylesheet" href="{% static 'css/custom.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/select2/select2.min.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/select2/select2-bootstrap.min.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/bootstrap-datepicker/css/bootstrap-datepicker.css' %}">
+
+<script src="{% static 'plugins/bootstrap-datepicker/js/bootstrap-datepicker.js' %}"></script>
+<script src="{% static 'plugins/bootstrap-datepicker/locales/bootstrap-datepicker.es.min.js' %}"></script>
+<script src="{% static 'plugins/select2/select2.min.js' %}"></script>
+
+<style type="text/css">
+   label{
+      font-weight: normal !important;
+   }
+</style>
+
+<div class="loader"></div>
+
+<!-- RESPUESTA DEL CLIENTE -->
+<div class="box box-success">
+   <div class="box-header with-border">
+      <h3 class="box-title">Reclamo Cliente </h3>
+      <a href="{% url 'prestamo_paso_uno' categoria reclamo id %}" class="pull-right"> << Atras {{request.GET.id}}</a>
+   </div>
+   <div class="box-body">
+      <form method="post" class="form-inline" accept-charset="utf-8" id="formulario-direccion">
+         {% csrf_token %}
+         <input type="hidden" name="metodo" id="metodo">
+         <!-- <div class="row">
+            <div class="col-sm-12">
+               <div class="form-group">
+                  <label for="inputDesde">Desde</label>
+                  <input type="text" class="form-control fecha" id="inputDesde" name="desde" value="{{desde}}">
+                  <input type="hidden" name="esFecha" id="esFecha" value="esFecha">
+               </div>
+               <div class="form-group">
+                  <label for="inputHasta">Hasta</label>
+                  <input type="text" class="form-control fecha" id="inputHasta" name="hasta" value="{{hasta}}">
+               </div>
+
+               <button type="submit" class="btn btn-default" id="filtro">Filtrar</button>
+               <a onclick="recargar()" class="btn btn-default" >Limpiar Filtro</a>
+            </div>
+         </div> -->
+         <label for="inputEmail3" class="control-label"><b>LISTADOS DE PRESTAMOS</b></label>
+         <br>
+         <br>
+         <div class="row">
+            <div class="col-sm-12">
+               <table class="table table-hover" id='tabla'>
+                  <thead>
+                     <tr>
+                        <th></th>
+                        <th>N. Transaccion</th>
+                        <th>Agencia</th>
+                        <th>Transaccion</th>
+                        <th>Fecha Transaccion</th>
+                        <th>Hora Transaccion</th>
+                        <th>Pago</th>
+                     </tr>
+                  </thead>
+                  <tbody>
+                     {% if transacciones %}
+                        {% for cuenta in transacciones %}
+                           <tr>
+                              <td><input type="checkbox" class="checkbox" name="transaccion" value="{{cuenta.id_transaccion}}"></td>
+                              <td>{{cuenta.id_transaccion}}</td>
+                              <td>{{cuenta.sucursal}}</td>
+                              <td>{{cuenta.transaccion}}</td>
+                              <td>{{cuenta.fecha}}</td>
+                              <td>{{cuenta.hora}}</td>
+                              <td>{{cuenta.total_pago}}</td>
+                           </tr>
+                        {% endfor %}
+                     {% endif %}
+                  </tbody>
+               </table>
+               <span class="label label-danger" style="display: none;" id='error'>Solamente se puede seleccionar una transaccion a la vez <br> <br></span>
+               <button type="submit" class="btn btn-success" id="reclamo" disabled>Ingresar Reclamo</button>
+            </div>
+         </div>
+      </form>
+      <br>
+      <br>
+   </div>
+</div>
+<!--........................................................................................ -->
+
+<script>
+   $('.cuenta').click(function(event) {
+      $('#id_cuenta').val($(this).attr('data-cuenta'))
+      return true
+   });
+
+   $('.fecha').datepicker({
+      autoclose: true,
+      format: 'yyyy-mm-dd',
+      language: 'es',
+      todayHighlight: true,
+   })
+
+   $('.fecha').change(function(){
+      $( ".fecha" ).each(function( index ) {
+         $( this ).prop('required', true)
+      });
+   })
+
+   function recargar(){
+      localStorage.clear();
+      location.href = location.href;
+   }
+
+   $('#filtro').click(function(event) {
+      $('#metodo').val('filtro')
+   });
+
+   $('#reclamo').click(function(event) {
+      $('#metodo').val('reclamo')
+   });
+
+
+   $('#tabla tbody tr, .checkbox').click(function(){
+      item = $(this).closest("tr").find(".checkbox").prop('checked')
+      if (item == true){
+          $(this).closest("tr").find(".checkbox").prop('checked', false)
+      }else{
+          $(this).closest("tr").find(".checkbox").prop('checked', true)
+      }
+
+      x = 0
+      $('.checkbox').each(function(){
+         if ($(this).prop('checked') == true){
+            x++
+         }
+      })
+
+      if (x > 1){
+         $('#error').show()
+         $('#reclamo').attr('disabled', true)
+      } else if (x == 0){
+         $('#reclamo').attr('disabled', true)
+      }else{
+         $('#error').hide()
+         $('#reclamo').attr('disabled', false)
+      }
+
+   })
+
+
+   
+</script>
+
+{% endblock %}

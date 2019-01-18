@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% load bootstrap %}
+
+{% block titulo %}
+{% endblock %}
+
+{% block contenido %}
+<script src="{% static 'plugins/select2/select2.min.js' %}"></script>
+<link rel="stylesheet" href="{% static 'plugins/select2/select2.min.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/select2/select2-bootstrap.min.css' %}">
+
+<link rel="stylesheet" href="{% static 'css/custom.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/datatables/dataTables.bootstrap.css' %}">
+<script src="{% static 'plugins/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'plugins/datatables/dataTables.bootstrap.min.js' %}"></script>
+
+<link rel="stylesheet" href="{% static 'plugins/bootstrap-datepicker/css/bootstrap-datepicker.css' %}">
+<script src="{% static 'plugins/bootstrap-datepicker/js/bootstrap-datepicker.js' %}"></script>
+<script src="{% static 'plugins/bootstrap-datepicker/locales/bootstrap-datepicker.es.min.js' %}"></script>
+
+<div class="loader"></div>
+   <!-- LISTADO DE CLIENTES -->
+   <div class="nav-tabs-custom">
+      <div class="tab-content">
+         <div class="tab-pane active no-padding" id="tab_1">
+         {% if exito %}
+            <span class="label label-success">Los mensajes se ha enviado con exito</span>
+            <br><br>
+         {% endif %}
+         {% if error %}
+            <span class="label label-danger">Error al mandar los mensajes</span>
+            <br><br>
+         {% endif %}
+         <!-- CLIENTES NORMALES -->         
+            <div>
+               <form class="form-inline" method="POST">
+                  {% csrf_token %}
+                  <table class="table table-hover" id="tabla_cliente">
+                     <thead>
+                        <tr>
+                           <th><input type="checkbox" id="todo" ></th>
+                           <th class="text-center">Codigo </th>
+                           <th class="text-center">No. Credito</th>
+                           <th class="text-center">Producto Credito</th>
+                           <th class="text-center">Nombre de Cliente</th>
+                           <th class="text-center">Dias Atraso</th>
+                           <th class="text-center">Cuotas Mora</th>
+                           <th class="text-center">Capital Mora</th>
+                           <th class="text-center">Int. Mora</th>
+                           <th class="text-center">Int. Moratorio</th>
+                           <th class="text-center">Saldo Mora</th>
+                           <th class="text-center">Fecha Proximo Pago</th>
+                        </tr>
+                     </thead>
+                     <tbody>
+                        {% for cliente in clientes  %}
+                           <tr class="tr-cliente" data-id='{{cliente.pk}}' data-nombre='{{cliente.nombre}}'>
+                              <td> <input type="checkbox" class="checkbox" name="cliente" value="{{cliente.pk}}"> </td>
+                              <td>{{cliente.cliente_interno}} </td>
+                              <td>{{cliente.credito}} </td>
+                              <td>{{cliente.producto_credito}} </td>
+                              <td>{{cliente.nombre}}</td>
+                              <td align="center">{{cliente.dias_atraso}}</td>
+                              <td align="center">{{cliente.cuotas_mora}}</td>
+                              <td align="right">{{cliente.capital_mora}}</td>
+                              <td align="right">{{cliente.intereses_mora}}</td>
+                              <td align="right">{{cliente.intereses_moratorios}}</td>
+                              <td align="right">{{cliente.saldo_total_creditos}}</td>
+                              <td align="center">{{cliente.proxima_fecha_pago|date:'Y-m-d'}}</td>
+                           </tr>
+                        {% endfor %}
+                     </tbody>
+                  </table>  
+               </form>          
+            </div>
+         </div>
+      </div>
+   </div>
+
+<script>
+   //El boton checkbox
+   $('#tabla_cliente tbody tr').click(function(){
+      item = $(this).closest("tr").find(".checkbox").prop('checked')
+      if (item == true){
+          $(this).closest("tr").find(".checkbox").prop('checked', false)
+      }else{
+          $(this).closest("tr").find(".checkbox").prop('checked', true)
+      }
+   })
+
+   $('#todo').change(function(){
+      if ($(this).prop('checked') == true){
+         $(".checkbox").prop('checked', true)
+      }else{
+         $(".checkbox").prop('checked', false)
+      }
+   })
+
+   $('.checkbox').click(function(){
+      item = $(this).closest("tr").find(".checkbox").prop('checked')
+      if (item == true){
+          $(this).closest("tr").find(".checkbox").prop('checked', false)
+      }else{
+          $(this).closest("tr").find(".checkbox").prop('checked', true)
+      }
+   })
+   
+      //este es para meter el formulario al momento que se carga la pagina, solo se hizo por estetica.
+   $(document).ready(function(){
+      formulario ='<button type="button" data-toggle="modal" data-target="#myModal" class="btn btn-success">Generar Notas de Cobro</button>'
+
+      //LA SEGUNDA PARTE DEL FILTRO FUMADA
+      div = $( "#tabla_cliente_wrapper .row" ).children().first()
+      elsegundo = $( "#tabla_cliente_wrapper .row > :nth-child(2)" ).first()
+      elsegundo.removeAttr("class").addClass("col-sm-3")
+      div.removeAttr("class").addClass("col-sm-9")
+      div.append(formulario)
+   });
+
+
+   jQuery.fn.dataTableExt.aTypes.unshift(
+    function ( sData )
+    {
+        var deformatted = sData.replace(/[^\d\-\.\/a-zA-Z]/g,'');
+        if ( $.isNumeric( deformatted ) || deformatted === "-" ) {
+            return 'formatted-num';
+        }
+        return null;
+    }
+   );
+
+   //PASAR  A ESPAÑOL EL DATATABLES
+   $("#tabla_cliente, #tabla_promesa_pago").DataTable({
+      "columnDefs": [
+         { type : 'formatted-num', "targets": [7,8,9,10], render: $.fn.dataTable.render.number(",", ".", 2, '')},
+         { className: "text-right", "targets": [7,8,9,10] },
+
+      ],
+      "pageLength": 50,
+      "order": [[ 2, "asc" ]],
+      "bLengthChange": false,
+      "language": {
+            "lengthMenu": "_MENU_ registros",
+            "zeroRecords": "No se encontro ningun registro",
+            "info": "Pagina _PAGE_ de _PAGES_",
+            "infoEmpty": "No hay registros",
+            "infoFiltered": "(filtrado de _MAX_ registros)",
+            "search":         "Buscar:",
+            "paginate": {
+                 "first":      "Primero",
+                 "last":       "Ultimo",
+                 "next":       "Siguiente",
+                 "previous":   "Anterior"
+             },
+        }
+   });
+  
+
+
+   //funcion de búsqueda (mal hecha)
+   
+
+</script>
+
+{% endblock %}

@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% load bootstrap %}
+
+
+{% block titulo %}
+{% endblock %}
+
+{% block contenido %}
+<link rel="stylesheet" href="{% static 'css/custom.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/datatables/dataTables.bootstrap.css' %}">
+<script src="{% static 'plugins/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'plugins/datatables/dataTables.bootstrap.min.js' %}"></script>
+
+<style type="text/css" media="screen">
+   
+   .largo{
+      width: 170px;
+   }
+</style>
+
+<div class="loader"></div>
+<!-- DETALLE CLIENTES -->
+<!-- LISTADO DE  CLIENTES -->
+<div class="box box-success">
+   <div class="box-header with-border">
+      <h3 class="box-title">Gestionar Cliente </h3>
+      <a href="{{request.session.pagina_principal}}" class="pull-right"> << Atras </a>
+
+   </div>
+   <div class="box-body">
+      <div class="row">
+         <div class="col-sm-8">
+            Codigo Cliente: <b>{{cliente.cliente_interno}}</b><br>
+            Nombre Cliente: <b>{{cliente.nombre}}</b> <br>
+            No. Credito: <b>{{cliente.credito}}</b> <br>
+         </div>
+      </div>
+
+      <br>
+      <br>
+      <div align="center">
+         <a href="{% url 'gestion_cliente' cliente_id %}" class="btn btn-success btn-lg largo"> Visita </a>
+         <a href="{% url 'nota_cobro' cliente_id %}" class="btn btn-success btn-lg largo"> Entrega Nota Cobro </a>
+         <a href="{% url 'direcciones_nota_cobro' cliente_id %}" class="btn btn-success btn-lg largo"> Crear Nota Cobro </a>
+         {% if request.user|has_group:"BO" %} 
+            <a href="{% url 'pre_judicial' cliente_id %}" class="btn btn-success btn-lg largo "> Pre Judicial </a>
+         {% endif %}
+      </div>
+      <br>
+      <div align="center">
+         {% if request.user|has_group:"BO" %} 
+            <a href="{% url 'judicial' cliente_id %}" class="btn btn-success btn-lg largo">Judicial</a>
+         {% endif %}
+         <a href="{% url 'correo' cliente_id %}" class="btn btn-success btn-lg largo"> Correo </a>
+         <a href="{% url 'gestion' cliente_id %}" class="btn btn-success btn-lg largo"> Llamada/Mensaje </a>
+      </div>
+      <br>
+      <br>
+   </div>
+</div>
+
+<!-- ........................................................................................ -->
+
+   {% include 'detalle_cliente.html' %}
+
+<script>
+   //Al darle click a actualizar se muestra el loader
+   $('#actualizar').click(function(event) {
+      $('.loader').show()
+      setTimeout(function() {
+         $('.loader').hide()
+      }, 3000);
+   });
+
+   
+
+   //Funcion para hacer un formato de miles con comas [1,200.00]
+   function numberWithCommas(x) {
+       return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+   }
+
+   
+   $('.plan-pago').click(function(event) {
+      $('.loader').show()
+      $("#tabla-plan-pago").find("tr:gt(0)").remove();
+      credito = $(this).attr('data-credito')
+      $.ajax({
+         url: '/cobranzas/gestion/ajax',
+         data: { opcion : 'plan_pago', credito : $(this).attr('data-credito') },
+      })
+      .done(function(response) {
+         $.each(response, function( index , registro ) {
+            fila  = '<tr>'
+            fila += '<td> ' + registro.fecha + ' </td>'
+            fila += '<td align="right"> ' + numberWithCommas(registro.cuota)  + ' </td>'
+            fila += '<td align="right"> ' + numberWithCommas(registro.capital)  + ' </td>'
+            fila += '<td align="right"> ' + numberWithCommas(registro.intereses)  + ' </td>'
+            switch(registro.pagado) {
+               case '1':
+                  fila += '<td> <span class="label label-success">Si</span> </td>'
+                  break;
+               case '2':
+                  fila += '<td> <span class="label label-danger">Mora</span> </td>'
+                  break;
+               case '3':
+                  fila += '<td> <span class="label label-warning">Pendiente</span> </td>'
+                  break;
+            }
+            fila += '</tr>'
+            $('#tabla-plan-pago').append(fila)
+         });
+
+         $('.loader').hide()
+         $('#modal-pago-credito').text(credito)
+         $('#plan_pago').modal('show')
+      })
+   });
+   
+
+   //PASAR  A ESPAÑOL EL DATATABLES
+   $("#tabla_cliente").DataTable({
+      "language": {
+            "lengthMenu": "_MENU_ registros",
+            "zeroRecords": "No se encontro ningun registro",
+            "info": "Pagina _PAGE_ de _PAGES_",
+            "infoEmpty": "No hay registros",
+            "infoFiltered": "(filtrado de _MAX_ registros)",
+            "search":         "Buscar:",
+            "paginate": {
+                 "first":      "Primero",
+                 "last":       "Ultimo",
+                 "next":       "Siguiente",
+                 "previous":   "Anterior"
+             },
+        }
+   });
+
+
+</script>
+
+{% endblock %}

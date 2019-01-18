@@ -1,0 +1,343 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% load bootstrap %}
+
+{% block titulo %}
+{% endblock %}
+
+{% block contenido %}
+<link rel="stylesheet" href="{% static 'css/custom.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/select2/select2.min.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/select2/select2-bootstrap.min.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/bootstrap-datepicker/css/bootstrap-datepicker.css' %}">
+
+<script src="{% static 'plugins/bootstrap-datepicker/js/bootstrap-datepicker.js' %}"></script>
+<script src="{% static 'plugins/bootstrap-datepicker/locales/bootstrap-datepicker.es.min.js' %}"></script>
+<script src="{% static 'plugins/select2/select2.min.js' %}"></script>
+
+<style type="text/css">
+   label{
+      font-weight: normal !important;
+   }
+</style>
+
+<div class="loader"></div>
+
+<!-- RESPUESTA DEL CLIENTE -->
+<div class="box box-success">
+   <div class="box-header with-border">
+      <h3 class="box-title">Gestionar Cliente </h3>
+      <a href="{% url 'gestionesbo' cliente.cliente %}" class="pull-right"> << Atras </a>
+   </div>
+   <div class="box-body">
+      <form method="post" accept-charset="utf-8" id="formulario-direccion">
+         {% csrf_token %}
+         <input type="hidden" name="metodo" value="localizado">
+         <input type="hidden" name="hora-inicio" id="hora-inicio" value="">
+         <div class="row">
+            <div class="col-sm-8">
+               Codigo Cliente: <b>{{cliente.cliente_interno}}</b><br>
+               Nombre Cliente: <b>{{cliente.nombre}}</b> <br>
+               
+            </div>
+            <div class="col-sm-4">
+                  <button type="button" class="btn btn-warning pull-right" id="btn-agregar-telefono">Agregar Dirección</button>
+            </div>
+         </div>
+         <p class="page-header"></p>
+         <p class="text-center sub-style">
+            RESULTADO NOTA DE COBRO
+         </p>
+         <p class="page-header"></p>
+         <div class="row">
+            <div class="col-sm-4">
+               <label>
+                  <input required type="radio" name="opcion" value="1" id="opcion_1">Entregado al Cliente
+               </label>
+            </div> 
+         </div>
+
+         <div class="row" id="direcciones_cliente" style="display: none;">
+            <div class="col-sm-7 col-md-offset-1">
+               <table class="table">
+                  <thead>
+                     <tr>
+                        <th>Tipo Direccion</th>
+                        <th>Direccion</th>
+                        <th></th>
+                     </tr>
+                  </thead>
+                  <tbody>
+                  {% for data in direcciones %}
+                     <tr>
+                        <td>{{data.tipo_direcciones__descripcion}}</td>
+                        <td>{{data.direccion}}</td>
+                        <td><input type="radio" name="direccion" value="{{data.codireccion}}" placeholder=""></td>
+                     </tr>
+                  {% endfor %}
+                  </tbody>
+               </table>
+            </div>
+         </div>
+
+         <div class="row">
+            <div class="col-sm-4">
+               <label>
+                  <input type="radio" name="opcion" value="2" id="opcion_2" >Entrega a Tercero
+               </label>
+            </div>
+            <div class="col-sm-3">
+               <input type="text" name="nombre" class="form-control" id="nombre" readonly placeholder="Nombre del Tercero">
+            </div>
+         </div>
+         <div class="row" id="direcciones_tercero"  style="display: none;">
+            <div class="col-sm-7 col-md-offset-1">
+               <table class="table">
+                  <thead>
+                     <tr>
+                        <th>Tipo Direccion</th>
+                        <th>Direccion</th>
+                        <th></th>
+                     </tr>
+                  </thead>
+                  <tbody>
+                  {% for data in direcciones %}
+                     <tr>
+                        <td>{{data.tipo_direcciones__descripcion}}</td>
+                        <td>{{data.direccion}}</td>
+                        <td><input type="radio" name="direccion" value="{{data.codireccion}}" placeholder=""></td>
+                     </tr>
+                  {% endfor %}
+                  </tbody>
+               </table>
+            </div>
+         </div>
+
+         <div class="row">
+         
+            <div class="col-sm-4">
+               <label>
+                  <input type="radio" name="opcion" value="3" id="opcion_3"> Carta no Entregada
+               </label>
+            </div>
+         </div>
+         <div class="row">
+            <div class="col-sm-12">
+               <br> <b> Observaciones: </b> <br>
+               <textarea name="observaciones" rows="5" class="form-control" width="100%"></textarea>
+            </div>
+         </div>
+
+
+         <br>
+         <button id="guardar" type="submit" class="btn btn-success" id='btn-actualizar'>Guardar Gestion</button>
+      </form>
+      <br>
+      <br>
+   </div>
+</div>
+<!--........................................................................................ -->
+<!-- Modal AGREGAR DIRECCION -->
+<div class="modal fade" id="modal-direccion" role="dialog" aria-labelledby="myModalLabel">
+   <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+         <div class="modal-header">
+            <button type="button" class="close cerrar-modal" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="myModalLabel">Agregar Dirección</h4>
+         </div>
+         <form method="post" accept-charset="utf-8" id="formulario-direccion">
+            <div class="modal-body">
+               {% csrf_token %}
+               <input type="hidden" name="metodo" value="direccion">
+               <div class="row">
+                  <div class="col-sm-8">
+                     Codigo Cliente: <b>{{cliente.cliente_interno}}</b><br>
+                     Nombre Cliente: <b>{{cliente.nombre}}</b> <br>
+                  </div>
+               </div>
+               <p class="page-header"></p>
+               <div class="row">
+                  <div class="col-sm-6">
+                     <label class="col-xs-4 control-label">Tipo Dirección</label>
+                     <div class="col-xs-8">
+                        <div class="form-group">
+                           <select id="tipo_direccion" class="form-control" name="tipo_direccion" required>
+                              <option value="">---</option>
+                              {% for tipo in tipo_direccion %}
+                                 <option value="{{tipo.tipo_direcciones}}">{{tipo.descripcion}}</option>
+                              {% endfor %}
+                           </select>
+                        </div>
+                     </div>
+                  </div>
+                  <div class="col-sm-6">
+                     <label class="col-xs-4 control-label">Departamento</label>
+                     <div class="col-xs-8">
+                        <div class="form-group">
+                           <select id="departamento" class="form-control" name="departamento" >
+                              <option value=>---</option>
+                              {% for departamento in departamentos %}
+                                 <option value="{{departamento.codigo}}">{{departamento.descripcion}}</option>
+                              {% endfor %}
+                           </select>
+                        </div>
+                     </div>
+                  </div>
+                  <div class="col-sm-6">
+                     <label class="col-xs-4 control-label">Municipio</label>
+                     <div class="col-xs-8">
+                        <div class="form-group">
+                           <select id="municipio" class="form-control" name="municipio" required>
+                              <!-- <option value="">---</option>
+                              {% for tipo in tipo_direccion %}
+                                 <option value="{{tipo.tipo_direcciones}}">{{tipo.descripcion}}</option>
+                              {% endfor %} -->
+                              
+                           </select>
+                        </div>
+                     </div>
+                  </div>
+                  <div class="col-sm-6">
+                     <label class="col-xs-4 control-label">Colonia</label>
+                     <div class="col-xs-8">
+                        <div class="form-group">
+                           <select id="colonia" class="form-control" name="colonia" required>
+                              <!-- <option value="">---</option>
+                              {% for tipo in tipo_direccion %}
+                                 <option value="{{tipo.tipo_direcciones}}">{{tipo.descripcion}}</option>
+                              {% endfor %} -->
+                              
+                           </select>
+                        </div>
+                     </div>
+                  </div>
+                  <div class="col-sm-6">
+                     <label class="col-xs-4 control-label">Dirección</label>
+                     <div class="col-xs-8">
+                        <input id="direccion" type="text" name="direccion" id="" class="form-control" required>
+                     </div>
+                  </div>
+               </div>
+            </div>
+
+            <div class="modal-footer">
+               <button type="submit" class="btn btn-success" id='btn-devolver'>Agregar Dirección</button>
+            </div>
+         </form>
+      </div>
+   </div>
+</div>
+<!-- ........................................................................................ -->
+
+
+{% include 'detalle_cliente.html' %}
+
+
+<script>
+   
+
+   $('#actualizar').click(function(event) {
+      $('.loader').show()
+      setTimeout(function() {
+         $('.loader').hide()
+      }, 3000);
+   });
+
+   $('#tipo_direccion, #departamento, #municipio, #colonia').select2({
+      theme : 'bootstrap',
+      width : '100%'
+   });
+
+   $('#fecha, #id_fecha').datepicker({
+      format: 'yyyy-mm-dd',
+      language: 'es',
+      autoclose: true,
+   });
+
+   $('input[name=opcion]').change(function(event) {
+      $('.opcion').prop('disabled', true);
+      $('.'+$(this).attr('id')).prop('disabled', false );
+   });
+
+   $('#btn-agregar-telefono').click(function(){
+    $('#modal-direccion').modal('show')
+   })
+
+   $('input[name=opcion]').change(function(event) {
+      console.log($(this).val())
+      opcion = $(this).val();
+      switch (opcion){
+         case '1':
+            $('#direcciones_cliente').show()
+            $('#direcciones_tercero').hide()
+            $('#nombre').prop('readonly', true)
+            break;
+         case '2':
+            $('#direcciones_cliente').hide()
+            $('#direcciones_tercero').show()
+            $('#nombre').prop('readonly', false)
+            break;
+         case '3':
+            $('#direcciones_cliente').hide()
+            $('#direcciones_tercero').hide()
+            $('#nombre').prop('readonly', true)
+            break;
+         case '4':
+            $('#fecha').prop('disabled', false)
+            $('#monto_promesa').prop('disabled', false)
+            break;     
+      }
+   });
+
+   function direccion(tabla, valor, select){
+         $('#' + select).empty();
+         $('#' + select).append("<option value=''>---------------</option>");
+        
+         valor= $('#'+valor).val()
+         $.ajax({
+            type: "GET",
+           data:
+               { tabla: tabla, valor: valor },
+            url: "",
+            success: function(msg){
+               $.each(msg, function(key, val){
+                  $('#' + select).append("<option value="+val.municipio+">" + '' + val.descripcion +"</option>");
+               });
+                  $('#' + select).trigger("chosen:updated");
+
+                  console.log(msg)
+            }
+         });
+      }
+
+      function direccioncolonia(tabla, valor, select){
+         $('#' + select).empty();
+         $('#' + select).append("<option value=''>---------------</option>");
+        
+         valor= $('#'+valor).val()
+         $.ajax({
+            type: "GET",
+           data:
+               { tabla: tabla, valor: valor },
+            url: "",
+            success: function(msg){
+               $.each(msg, function(key, val){
+                  $('#' + select).append("<option value="+val.colonia+">" + '' + val.descripcion +"</option>");
+               });
+                  $('#' + select).trigger("chosen:updated");
+
+                  console.log(msg)
+            }
+         });
+      }
+       
+      $('#departamento').change(function(){
+         direccion('municipio', 'departamento', 'municipio' )
+      })
+      $('#municipio').change(function(){
+         direccioncolonia('colonia', 'municipio', 'colonia' )
+      })
+   
+</script>
+
+{% endblock %}

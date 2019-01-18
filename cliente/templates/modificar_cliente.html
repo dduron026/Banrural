@@ -1,0 +1,336 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% load bootstrap %}
+
+
+{% block contenido %}
+<script src="{% static 'plugins/select2/select2.min.js' %}"></script>
+<link rel="stylesheet" href="{% static 'plugins/select2/select2.min.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/select2/select2-bootstrap.min.css' %}">
+
+<script src="{% static 'js/bootstrap3-typeahead.js' %}"></script>
+
+<style>
+   #modal-localizado .modal-body {
+      max-height: 500px;
+      overflow-y: scroll;
+   }
+   .select2-container .select2-selection--single .select2-selection__rendered{
+      margin-top: 0px;
+   }
+   .nav-tabs-custom > .nav-tabs > li.active{
+      border-top-color:#00a65a;
+   }
+</style> 
+<div class="box box-success">
+   <div class="box-header with-border">
+      <h3 class="box-title">Busqueda de Cliente para Modificación de Datos</h3>
+   </div>
+   <div class="box-body">
+      <form method="post" accept-charset="utf-8" id="formulario">
+         <div class="modal-body">
+            {% csrf_token %}
+            <input type="hidden" name="metodo" value="actualizar">
+            <input type="hidden" name="" id="valor-reloj" value="comenzar">
+            <input type="hidden" name="modal-localizado-cliente" id="modal-localizado-cliente" value="">
+            <input type="hidden" name="hora-inicio" id="modal-localizado-inicio" value="">
+            <input type="hidden" name="telefono" id="modal-localizado-telefono" value="">
+            <input type="hidden" name="tipo-gestion" id="modal-localizado-tipo-gestion" value="">
+            <div class="row">
+               <div class="col-sm-12">
+                  <div class="form-group">
+                     <label class="control-label col-md-2 text-right" for="identidad">Identidad</label>
+                     <div class=" col-md-10 form-inline">
+                        <input type="hidden" name="codigo" class="form-control" id='id_codigo'> 
+                        <input type="hidden" name="id" class="form-control" id='id_id'> 
+                        <input type="text" name="identidad" class="form-control" id='identidad' required> 
+                        <button type="button" class="btn btn-primary" id="search_identidad"><span class="glyphicon glyphicon-search" aria-hidden="true"></span></button><br>
+                        <span class="label label-danger "  id='error_identidad' style="display:none">No se encontraron registros con la identidad ingresadda</span>
+                        <span class="label label-warning "  id='identidad_actualizada' style="display:none">Los datos de este cliente no han sido actualizados</span>
+                     </div>
+                  </div> 
+               </div>
+            </div>
+            <p class="page-header"></p>
+            <p class="text-center sub-style">
+            DATOS GENERALES
+            </p>
+            <p class="page-header"></p>
+            <div class="form-horizontal">
+
+            <div class="row">
+               <div class="col-sm-6">
+                  <label class="col-sm-4 text-right"> Cliente </label> <span class="col-sm-6" id="id_nombre" ></span> <br>
+               </div>
+               <div class="col-sm-6">
+                  <label class="col-sm-4 text-right"> Identidad </label> <span class="col-sm-6" id="id_identidad" ></span> <br>
+               </div>
+            </div>
+
+            <div class="row">
+               <div class="col-sm-6">
+                  <label class="col-sm-4 text-right"> Codigo Cliente </label> <span class="col-sm-6" id="id_codigo_cliente" ></span> <br>
+               </div>
+               <div class="col-sm-6">
+                  <label class="col-sm-4 text-right"> Número Electrónico </label> <span class="col-sm-6" id="id_rifa" ></span> <br>
+               </div>
+            </div>
+
+               <div class="row">
+                  <div class="col-sm-6">
+                     {{formulario.estado_civil|bootstrap_horizontal:'col-xs-4'}}
+                  </div>
+               </div>
+               <div class="row">
+                  <div class="col-sm-6">
+                     {{formulario.departamento|bootstrap_horizontal:'col-xs-4'}}
+                  </div>
+                  <div class="col-sm-6">
+                     <label for="id_municipio" class="col-xs-4 control-label">Municipio*</label>
+                     <div class="col-xs-8">
+                        <select class="form-control" id="id_municipio" name="municipio">
+                           <option value="">---------------</option>
+                        </select>
+                        {{ formulario.municipio.errors }}
+                     </div>
+                  </div>
+               </div>
+               <div class="row">
+                  <div class="col-sm-6">
+                     {{formulario.colonia|bootstrap_horizontal:'col-xs-4'}}
+                  </div>
+                  <div class="col-sm-6">
+                     {{formulario.referencia|bootstrap_horizontal:'col-xs-4'}}
+                  </div>
+               </div>
+               <div class="row">
+                  <div class="col-sm-6">
+                     {{formulario.telefono_fijo|bootstrap_horizontal:'col-xs-4'}}
+                  </div>
+                  <div class="col-sm-6">
+                     {{formulario.telefono_celular|bootstrap_horizontal:'col-xs-4'}}
+                  </div>
+               </div>
+               <div class="row">
+                  <div class="col-sm-6">
+                     {{formulario2.telefono_celular2|bootstrap_horizontal:'col-xs-4'}}
+                  </div>
+                  <div class="col-sm-6">
+                     {{formulario2.correo_electronico|bootstrap_horizontal:'col-xs-4'}}
+                  </div>
+               </div>
+               <div class="row">
+                  <div class="col-sm-6">
+                     {{formulario.profesion_cliente|bootstrap_horizontal:'col-xs-4'}}
+                  </div>
+                  <div class="col-sm-6">
+                     {{formulario.monto_cuentas|bootstrap_horizontal:'col-xs-4'}}
+                  </div>
+               </div>
+               <div class="row">
+                  <div class="col-sm-6">
+                     {{formulario.ingresos|bootstrap_horizontal:'col-xs-4'}}
+                  </div>
+               </div>
+
+
+               <p class="page-header"></p>
+               <p class="text-center sub-style">
+               DATOS LABORALES
+               </p>
+               <p class="page-header"></p>
+               <div class="row">
+                  <div class="col-sm-6">
+                     {{formulario2.tipo_empresa|bootstrap_horizontal:'col-xs-4'}}
+                  </div>
+                  <div class="col-sm-6">
+                     {{formulario.lugar_trabajo|bootstrap_horizontal:'col-xs-4'}}
+                  </div>
+               </div>
+               <div class="row">
+                  <div class="col-sm-6">
+                     {{formulario2.puesto|bootstrap_horizontal:'col-xs-4'}}
+                  </div>
+                  <div class="col-sm-6">
+                     {{formulario.referencia_trabajo|bootstrap_horizontal:'col-xs-4'}}
+                  </div>
+               </div>
+               <div class="row">
+                  <div class="col-sm-6">
+                     {{formulario2.antiguedad_anios|bootstrap_horizontal:'col-xs-4'}}
+                  </div>
+                  <div class="col-sm-6">
+                     {{formulario2.antiguedad_meses|bootstrap_horizontal:'col-xs-4'}}
+                  </div>
+               </div>
+               <div class="row">
+                  <div class="col-sm-6">
+                     {{formulario.departamento_trabajo|bootstrap_horizontal:'col-xs-4'}}
+                  </div>
+                  <div class="col-sm-6">
+                     <label for="id_municipio_trabajo" class="col-xs-4 control-label">Municipio*</label>
+                     <div class="col-xs-8">
+                        <select class="form-control" id="id_municipio_trabajo" name="municipio_trabajo">
+                           <option value="">---------------</option>
+                        </select>
+                        {{ formulario.municipio_trabajo.errors }}
+                     </div>
+                  </div>
+               </div>
+               <div class="row">
+                  <div class="col-sm-6">
+                     {{formulario.telefono_fijo_trabajo|bootstrap_horizontal:'col-xs-4'}}
+                  </div>
+                  <div class="col-sm-6">
+                     {{formulario.correo_electronico_trabajo|bootstrap_horizontal:'col-xs-4'}}
+                  </div>
+               </div>
+               <div class="row">
+                  <div class="col-sm-6">
+                     {{formulario2.actividad_cliente|bootstrap_horizontal:'col-xs-4'}}
+                  </div>
+                  <div class="col-sm-6">
+                     {{formulario.filial|bootstrap_horizontal:'col-xs-4'}}
+                  </div>
+               </div>
+            </div>
+         </div>
+
+         <div class="modal-footer">
+           <button type="submit" class="btn btn-success" id='btn-actualizar'>Modificar Datos</button>
+         </div>
+      </form>
+   </div>
+</div>
+<script>
+
+$(document).ready(function() { 
+    $('select').select2({
+      theme:'bootstrap',
+      width: '100%'
+   })
+    $('#id_telefono_celular, #id_telefono_fijo_trabajo, #id_telefono_contacto, #id_telefono_fijo, #id_telefono_celular2').attr({
+        onKeyDown:"if(this.value.length==8 && event.keyCode!=8) return false;",
+        type:'number'
+    })
+    $('#identidad').attr({
+        onKeyDown:"if(this.value.length==13 && event.keyCode!=8) return false;",
+        type:'number'
+    })
+       
+});
+
+function ajaxsace(tabla, valor, select){
+   $('#' + select).empty();
+   $('#' + select).append("<option value=''>---------------</option>");
+   valor= $('#'+valor).val()
+   $.ajax({
+      type: "GET",
+      data:
+         { tabla: tabla, valor: valor },
+      url: "/cliente/ajax/",
+      success: function(msg){
+         $.each(msg, function(key, val){
+            $('#' + select).append("<option value="+val.id+">" + '' + val.codigo + ' | ' + val.nombre + "</option>");
+         });
+            $('#' + select).trigger("chosen:updated");
+      }
+   });
+}
+
+$('#id_departamento').change(function(){
+   ajaxsace('municipio', 'id_departamento', 'id_municipio' )
+})
+
+$('#id_departamento_trabajo').change(function(){
+   ajaxsace('municipio', 'id_departamento_trabajo', 'id_municipio_trabajo' )
+})
+
+$('#search_identidad').click(function(){
+   identidad = $('#identidad').val()
+   $.ajax({
+      url: "{% url 'modificar_cliente' %}",
+      data: { 
+         identidad: identidad
+      }
+   })
+   .done(function( data ) {
+      if (data.persona == false){
+         $('#identidad_actualizada').show()
+         $('#formulario').trigger('reset')
+         $('#identidad').val(identidad)
+         $('#id_nombre, #id_identidad').text('')
+         $('select').val('').select2("val", "").change();
+      }else{
+         $('#identidad_actualizada').hide()
+         $('#id_nombre').text(data.persona.primer_nombre + ' ' + data.persona.primer_apellido + ' ' + data.persona.segundo_apellido)
+         $('#id_identidad').text(data.persona.identidad)
+         $('#id_rifa').text(data.persona.rifa)
+         $('#id_codigo_cliente').text(data.persona.codigo)
+         $('#id_codigo').val(data.persona.codigo)
+         $('#id_id').val(data.persona.id)
+         $('#id_telefono_fijo').val(data.persona.telefono_fijo)
+         $('#id_telefono_celular').val(data.persona.telefono_celular)
+         $('#id_departamento').val(data.persona.departamento).trigger('change')
+         $('#id_colonia').val(data.persona.colonia)
+         $('#id_referencia').val(data.persona.referencia)
+         $('#id_estado_civil_'+(parseInt(data.persona.estado_civil)-1)).prop('checked', true)
+         $('#id_telefono_celular2').val(data.persona.telefono_celular2)
+         $('#id_correo_electronico').val(data.persona.correo_electronico)
+         $('#id_ingresos_'+(parseInt(data.persona.ingresos)-1)).prop('checked', true)
+         $('#id_monto_cuentas').val(data.persona.monto_cuentas)
+         $('#id_departamento_trabajo').val(data.persona.departamento_trabajo).trigger('change')
+         $('#id_lugar_trabajo').val(data.persona.lugar_trabajo)
+         $('#id_referencia_trabajo').val(data.persona.referencia_trabajo)
+         $('#id_telefono_fijo_trabajo').val(data.persona.telefono_fijo_trabajo)
+         $('#id_correo_electronico_trabajo').val(data.persona.correo_electronico_trabajo)
+         $('#id_filial').val(data.persona.filial).trigger('change')
+         $('#id_tipo_empresa').val(data.persona.tipo_empresa).trigger('change')
+         $('#id_puesto').val(data.persona.puesto)
+         $('#id_antiguedad_anios').val(data.persona.antiguedad_anios)
+         $('#id_antiguedad_meses').val(data.persona.antiguedad_meses)
+         $('#id_correo_electronico').val(data.persona.correo_electronico)
+         $('#id_profesion_cliente').val(data.persona.profesion_cliente).trigger('change')
+         $('#id_actividad_cliente').val(data.persona.actividad_cliente).trigger('change')
+         
+         setTimeout(function(){
+           $('#id_municipio').val(data.persona.municipio).trigger('change')
+           $('#id_municipio_trabajo').val(data.persona.municipio_trabajo).trigger('change')
+
+         }, 2000);
+
+
+      }
+
+   });
+})
+
+$('#id_tipo_empresa, #id_departamento_trabajo, #id_municipio_trabajo, #id_lugar_trabajo, #id_referencia_trabajo, #id_colonia, #id_municipio, #id_departamento').prop('required', true)
+$('#id_tipo_empresa').change(function(){
+   opcion = $("#id_tipo_empresa option:selected").text()
+   if (opcion == 'Ninguna'){
+      $('#id_departamento_trabajo, #id_municipio_trabajo, #id_lugar_trabajo, #id_referencia_trabajo, #id_telefono_fijo_trabajo, #id_correo_electronico_trabajo, #id_tipo_empresa, #id_puesto, #id_antiguedad_anios, #id_antiguedad_meses, #id_telefono_contacto, #id_rubro').prop('readonly', true)
+      $('#id_departamento_trabajo, #id_municipio_trabajo, #id_lugar_trabajo, #id_referencia_trabajo').prop('required', false)
+      $('#id_municipio_trabajo, #id_departamento_trabajo, #id_actividad_cliente').prop('disabled', true)
+   }else{
+      $('#id_departamento_trabajo, #id_municipio_trabajo, #id_lugar_trabajo, #id_referencia_trabajo, #id_telefono_fijo_trabajo, #id_correo_electronico_trabajo, #id_tipo_empresa, #id_puesto, #id_antiguedad_anios, #id_antiguedad_meses, #id_telefono_contacto, #id_rubro').prop('readonly', false)
+      $('#id_tipo_empresa, #id_departamento_trabajo, #id_municipio_trabajo, #id_lugar_trabajo, #id_referencia_trabajo').prop('required', true)
+      $('#id_municipio_trabajo, #id_departamento_trabajo, #id_actividad_cliente').prop('disabled', false)
+   }
+})
+
+$("#id_colonia, #id_referencia_trabajo, #id_referencia, #id_lugar_trabajo, #id_puesto, #comentarios").on('input', function(evt) {
+  $(this).val(function (_, val) {
+    return val.toUpperCase();
+  });
+});
+
+ $("#id_colonia").prop('autocomplete', 'off')
+ $.get('{% static "colonia.json" %}', function(data){
+    $("#id_colonia").typeahead({ source:data });
+  },'json');
+
+
+</script>
+      
+{% endblock %}

@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+
+
+{% block contenido %}
+
+<link rel="stylesheet" href="{% static 'plugins/daterangepicker/daterangepicker.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/datatables/dataTables.bootstrap.css' %}">
+<script src="{% static 'plugins/daterangepicker/moment.min.js' %}"></script>
+<script src="{% static 'plugins/daterangepicker/daterangepicker.js' %}"></script>
+<script src="{% static 'plugins/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'plugins/datatables/dataTables.bootstrap.min.js' %}"></script>
+
+<div class="box box-success">
+  <div class="box-header with-border">
+     <h3 class="box-title">Listado de Clientes Actualizados</h3>
+  </div>
+  <div class="box-body">
+  <form method="POST" class="form-inline">
+    {% csrf_token %}
+    <label for="fecha"> Fecha </label>
+     <input type="text" class="form-control" value="{{fecha}}" name="fecha" id="id_fecha" required> 
+     <label for="fecha"> Operador </label>
+     <select class="form-control" name="operador">
+        <option value=""> ---------------- </option>
+        {% for operador in operadores  %}
+        <option value="{{operador.pk}}"> {{operador.first_name}}  {{operador.last_name}}</option>   
+        {% endfor %}
+     </select>
+    <button class="btn btn-success">Generar Reporte</button>
+  </form>
+     <table id="tabla_cliente" class="table">
+      <thead>
+        <tr>
+           <th>Nombre de Cliente</th>
+           <th>Telefono</th>
+           <th>Operador</th>
+           <th>Fecha de Actualizacion</th>
+        </tr>            
+      </thead>
+      <tbody>
+        {% for gestion in clientes  %}
+           <tr class="tr-cliente" data-id='{{gestion.pk}}'>
+              <td>{{gestion.cliente_localizado.primer_nombre}} {{gestion.cliente_localizado.primer_apellido}} {{gestion.cliente_localizado.segundo_apellido}}</td>
+              <td>{{gestion.telefono}}</td>
+              <td> {{gestion.agente.first_name}} {{gestion.agente.last_name}}</td>
+              <td>{{gestion.fecha|date:"m-d-Y"}} </td>
+           </tr>
+        {% endfor %}
+      </tbody>
+     </table>
+  </div>
+</div>
+
+<script type="text/javascript">
+
+    $('#id_fecha').daterangepicker({
+        //autoUpdateInput: false,
+        singleDatePicker: true,
+        showDropdowns: true,
+        maxDate: moment(),
+        locale: {
+          format: 'YYYY-MM-DD',
+
+          daysOfWeek: [
+            "Do",
+            "Lu",
+            "Ma",
+            "Mi",
+            "Ju",
+            "Vi",
+            "Sa"
+        ],
+        monthNames: [
+            "Enero",
+            "Febrero",
+            "Marzo",
+            "Abril",
+            "Mayo",
+            "Junio",
+            "Julio",
+            "Agosto",
+            "Septiembre",
+            "Octubre",
+            "Noviembre",
+            "Diciembre"
+        ],
+        },
+    }).val('{{fecha}}');
+  
+  $(function () {
+    $('#tabla_cliente').DataTable({
+      "paging": true,
+      "lengthChange": false,
+      "searching": true,
+      "ordering": true,
+      "info": false,
+      "autoWidth": false
+    });
+  });
+</script>
+
+{% endblock %}

@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% load bootstrap %}
+
+
+{% block contenido %}
+<script src="{% static 'plugins/select2/select2.min.js' %}"></script>
+<link rel="stylesheet" href="{% static 'plugins/select2/select2.min.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/select2/select2-bootstrap.min.css' %}">
+
+<script src="{% static 'js/bootstrap3-typeahead.js' %}"></script>
+
+<style>
+   #modal-localizado .modal-body {
+      max-height: 500px;
+      overflow-y: scroll;
+   }
+   .select2-container .select2-selection--single .select2-selection__rendered{
+      margin-top: 0px;
+   }
+   .nav-tabs-custom > .nav-tabs > li.active{
+      border-top-color:#00a65a;
+   }
+</style> 
+<div class="box box-success">
+   <div class="box-header with-border">
+      <h3 class="box-title">Busqueda de Ticket Electronico</h3>
+   </div>
+   <div class="box-body">
+      <form method="post" accept-charset="utf-8" id="formulario">
+         <div class="modal-body">
+            {% csrf_token %}
+            <div class="row">
+               <div class="col-sm-12">
+                  <div class="form-group">
+                     <label class="control-label col-md-3" for="identidad">Identidad o Codigo de Cliente</label>
+                     <div class=" col-md-9 form-inline">
+                        <input type="text" name="identidad" class="form-control" id='identidad' required> 
+                        <button type="button" class="btn btn-primary" id="search_identidad"><span class="glyphicon glyphicon-search" aria-hidden="true"></span></button><br>
+                        <span class="label label-danger "  id='error_identidad' style="display:none">No se encontraron registros con la identidad ingresadda</span><br><br>
+                     </div>
+                  </div> 
+               </div>
+            </div>
+            <div class="well">
+               <div class="row">
+                  <div class="col-sm-2">
+                     <label> CLIENTE </label>
+                  </div>
+                  <div class="col-sm-8">
+                     <label id="cliente"></label>
+                  </div>
+               </div>
+               <div class="row">
+                  <div class="col-sm-2">
+                     <label> TICKET ELECTRONICO </label>
+                  </div>
+                  <div class="col-sm-8">
+                     <label style="font-size: 25px" id="ticket"></label>
+                  </div>
+               </div>
+            </div>
+         </div>
+      </form>
+   </div>
+</div>
+<script>
+
+$(document).ready(function() { 
+    $('#identidad').attr({
+        onKeyDown:"if(this.value.length==13 && event.keyCode!=8) return false;",
+        type:'number'
+    })
+
+   $('#search_identidad').click(function(event) {
+      identidad = $('#identidad').val()
+      $.ajax({
+         url: "{% url 'busqueda_ticket' %}",
+         data: { 
+            identidad: identidad
+         }
+      })
+      .done(function(data) {
+         if (data != false){
+            $('#error_identidad').hide()
+            $('#ticket').text(data.rifa)
+            $('#cliente').text(data.primer_nombre + ' ' + data.primer_apellido)
+         }else{
+            $('#error_identidad').show()
+            $('#ticket, #cliente').text('')
+         }
+      })
+   });
+       
+});
+
+</script>
+      
+{% endblock %}

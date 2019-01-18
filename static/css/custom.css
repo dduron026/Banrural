@@ -1,0 +1,43 @@
+#modal-localizado .modal-body {
+  max-height: 500px;
+  overflow-y: scroll;
+}
+.select2-container .select2-selection--single .select2-selection__rendered{
+  margin-top: 0px;
+}
+.nav-tabs-custom > .nav-tabs > li.active{
+  border-top-color:#00a65a;
+}
+.table>tbody>tr>td, .table>tbody>tr>th, .table>tfoot>tr>td, .table>tfoot>tr>th{
+  padding : 2px;
+}
+.table.dataTable tbody tr.active:hover td, .table.dataTable tbody tr.active:hover th{
+  background-color : #ddd;
+}
+.table.dataTable tbody tr.active:hover td, .table.dataTable tbody tr.active:hover th{
+  background-color: #ddd !important;
+}
+.table.dataTable tbody tr.active td, .table.dataTable tbody tr.active th{
+  background-color :#ddd;
+  color: black;
+}
+.sub-style {
+  font-family: Tahoma, Verdana, Segoe, sans-serif;
+  color: #269AFF;
+  font-size: 12;
+  font-weight: bold;
+}
+.loader {
+  display: none;
+   animation: spin 2s linear infinite;
+   position:   fixed;
+   z-index:    1000;
+   top:        0;
+   left:       0;
+   height:     100%;
+  width:      100%;
+     background: rgba( 255, 255, 255, .8 ) 
+            url('http://i.stack.imgur.com/FhHRx.gif') 
+            50% 50% 
+            no-repeat;
+}

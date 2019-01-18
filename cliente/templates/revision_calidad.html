@@ -1,0 +1,548 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+
+
+{% block contenido %}
+
+<link rel="stylesheet" href="{% static 'plugins/daterangepicker/daterangepicker.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/datatables/dataTables.bootstrap.css' %}">
+<script src="{% static 'plugins/daterangepicker/moment.min.js' %}"></script>
+<script src="{% static 'plugins/daterangepicker/daterangepicker.js' %}"></script>
+<script src="{% static 'plugins/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'plugins/datatables/dataTables.bootstrap.min.js' %}"></script>
+
+<div class="box box-success">
+  <div class="box-header with-border">
+     <h3 class="box-title">Listado de Clientes Actualizados</h3>
+  </div>
+  <div class="box-body">
+    {% if error %}
+        <div class="alert alert-danger">
+          <strong>Error al Actualizar:</strong> Los datos no se actualizaron, porfavor contactarse con el administrador.
+        </div>
+        <br>
+    {% endif %}
+    {% if exito %}
+        <div class="alert alert-success" id="exito" style="display:none">
+          <strong>LOS CAMBIOS FUERON APLICADOS CORRECTAMENTE</strong>
+        </div>
+        <br>
+    {% endif %}
+    
+  <form method="POST" class="form-inline">
+    {% csrf_token %}
+    <label for="fecha"> Fecha </label>
+    <input type="text" class="form-control" value="{{fecha}}" name="fecha" id="id_fecha" required> 
+    <input type="hidden" class="form-control" value="fecha" name="metodo"> 
+    <button class="btn btn-success">Ver Clientes Actualizados</button>
+  </form>
+     <table id="tabla_cliente" class="table table-hover">
+        <thead>
+          <tr>
+             <th>Nombre de Cliente</th>
+             <th>Telefono</th>
+             <th>Operador</th>
+             <th>Fecha de Actualizacion</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for gestion in clientes  %}
+             <tr class="tr-cliente" data-gestion='{{gestion.id}}' data-codigo='{{gestion.cliente}}'>
+                <td>{{gestion.cliente_localizado.primer_nombre}} {{gestion.cliente_localizado.primer_apellido}} {{gestion.cliente_localizado.segundo_apellido}}</td>
+                <td>{{gestion.telefono}}</td>
+                <td> {{gestion.agente.first_name}} {{gestion.agente.last_name}}</td>
+                <td>{{gestion.fecha|date:"d-m-Y"}} </td>
+             </tr>
+          {% endfor %}
+        </tbody>
+     </table>
+  </div>
+</div>
+
+   <!-- Modal COMPARACION -->
+<div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+ <div class="modal-dialog modal-lg" role="document">
+   <div class="modal-content">
+      <form method ="POST">
+      {% csrf_token %}
+        <input type="hidden" value="migracion" name="metodo" id="metodo">
+        <input type="hidden" value="" name="cliente_historico" id="cliente_historico"> 
+        <input type="hidden" value="" name="gestion" id="gestion"> 
+        <input type="hidden" value="" name="codigo_cliente" id="codigo_cliente"> 
+        <div class="modal-header">
+          <button type="button" class="close cerrar-modal" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          <h4 class="modal-title" id="myModalLabel">Comparacion</h4>
+        </div>
+        <div class="modal-body">
+            <div class="row">
+                <div class="col-md-7">
+                    <label> Agente: </label> <span id="agente" ></span> <br>
+                    <label> Fecha Actualización: </label> <span id="fecha_actualizacion" ></span> <br>
+                    <label> Codigo del Cliente: </label> <span id="codigo" ></span> <br>
+                    <label> Identidad: </label> <span id="identidad" ></span> <br>
+                    <label> Cliente: </label> <span id="nombre" ></span> <br>
+                    <label> Ticket Electrónico: </label> <span id="rifa" ></span> <br><br>
+                </div>
+                <div class="col-md-5">
+                    <input type="hidden" name="editar_cliente" id="editar_cliente" value="false">
+                    <input type="hidden" name="direccion_trabajo" id="direccion_trabajo" value="false">
+                    <input type="hidden" name="direccion_residencia" id="direccion_residencia" value="false">
+                    <div>
+                        <button type="button" class="btn btn-default btn-block" id="editar">EDITAR CLIENTE</button>
+                    </div>
+                    <div class="checkbox">
+                        <label>
+                            <input type="checkbox" id="check_direccion_residencia"> <b> USAR LA DIRECCION DE RESIDENCIA ANTERIOR </b>
+                        </label>
+                    </div>
+                    <div class="checkbox">
+                        <label>
+                            <input type="checkbox" id="check_direccion_trabajo"> <b> USAR LA DIRECCION DE TRABAJO ANTERIOR </b>
+                        </label>
+                    </div>
+                </div>
+            </div>
+          
+          <div id="data">
+          </div>
+          <div id="alerta" style="display:none">
+            <h4 align="right"><span class="label label-success">LOS CAMBIOS FUERON APLICADOS CORRECTAMENTE</span></h4>
+          </div>
+
+        </div>
+        <div class="modal-footer" id="botones">
+           <button type="submit" class="btn btn-danger" id="btn-rechazado">Rechazar</button>
+           <button type="submit" class="btn btn-success" id="btn-actualizar">Actualizar</button>
+        </div>
+        <div class="modal-footer" style="display:none" id="parte_editar">
+           <button type="button" class="btn btn-warning" id="btn-editar">Aplicar Cambios</button>
+        </div>
+      </form>
+   </div>
+ </div>
+</div>
+
+<script type="text/javascript">
+{% if exito %}
+    $('#exito').fadeIn('slow').delay(5000).fadeOut('slow');
+{% endif %}
+$('#btn-editar').click(function(event) {
+    var txt;
+    var r = confirm("Esta seguro de aplicar los cambios");
+    if (r == true) {
+         $.ajax({
+            url: "{% url 'revision_calidad' %}",
+            data: { 
+                metodo: 'editar',
+                editar :  $('#editar_cliente').val(),
+                direccion_residencia:  $('#direccion_residencia').val(),
+                direccion_trabajo:  $('#direccion_trabajo').val(),
+                codigo: $('#codigo_cliente').val(),
+                colonia: $('#input_colonia').val(),
+                referencia: $('#input_referencia').val(),
+                correo_electronico: $('#input_correo_electronico').val(),
+                telefono_fijo: $('#input_telefono_fijo').val(),
+                telefono_celular: $('#input_telefono_celular').val(),
+                lugar_trabajo: $('#input_lugar_trabajo').val(),
+                referencia_trabajo: $('#input_referencia_trabajo').val(),
+                telefono_fijo_trabajo: $('#input_telefono_fijo_trabajo').val(),
+                correo_electronico_trabajo: $('#input_correo_electronico_trabajo').val(),
+                puesto: $('#input_puesto').val(),
+            }
+        })
+        .done(function( data ) {
+            if (data.exito == 'direccion_residencia') {
+                $('#check_direccion_residencia').prop('checked', false).trigger('change')
+                
+                $('#input_colonia').val('')
+                $('#input_referencia').val(((data.referencia == null || data.referencia == '') ? '' : data.referencia) )
+                
+                $('#colonia').text('')
+                $('#referencia').text(((data.referencia == null || data.referencia == '') ? '<span class="label label-danger">VACIO</spam>' : data.referencia) )
+            }
+            if (data.exito == 'direccion_trabajo') {
+                console.log('PASO POR AQUI CHIQUI')
+                $('#check_direccion_trabajo').prop('checked', false).trigger('change')
+
+                $('#input_referencia_trabajo').val(((data.referencia_trabajo == null || data.referencia_trabajo == '') ? '' : data.referencia_trabajo) )
+                $('#referencia_trabajo').text(((data.referencia_trabajo == null || data.referencia_trabajo == '') ? '<span class="label label-danger">VACIO</spam>' : data.referencia_trabajo) )
+            }
+            if (data.editar== true){
+                $('#editar').trigger('click')
+                $('#check_direccion_anterior').prop('checked', false).trigger('change')
+
+                $('#colonia').text(data.colonia)
+                $('#referencia').text(((data.referencia == null || data.referencia == '') ? '' : data.referencia) )
+                $('#referencia_trabajo').text(((data.referencia_trabajo == null || data.referencia_trabajo == '') ? '' : data.referencia_trabajo) )
+                $('#correo_electronico').text(((data.correo_electronico == null || data.correo_electronico == '') ? '' : data.correo_electronico) )
+                $('#telefono_fijo').text(((data.telefono_fijo == null || data.telefono_fijo == '') ? '' : data.telefono_fijo) )
+                $('#telefono_celular').text(((data.telefono_celular == null || data.telefono_celular == '') ? '' : data.telefono_celular) )
+                $('#lugar_trabajo').text(((data.lugar_trabajo == null || data.lugar_trabajo == '') ? '' : data.lugar_trabajo) )
+                $('#referencia_trabajo').text(((data.referencia_trabajo == null || data.referencia_trabajo == '') ? '' : data.referencia_trabajo) )
+                $('#telefono_fijo_trabajo').text(((data.telefono_fijo_trabajo == null || data.telefono_fijo_trabajo == '') ? '' : data.telefono_fijo_trabajo) )
+                $('#correo_electronico_trabajo').text(((data.correo_electronico_trabajo == null || data.correo_electronico_trabajo == '') ? '' : data.correo_electronico_trabajo) )
+                $('#puesto').text(((data.puesto == null || data.puesto == '') ? '' : data.puesto) )
+            }
+            $('#alerta').fadeIn('slow').delay(8000).fadeOut('slow');
+            
+        })
+    } else {
+        $('#editar').trigger('click')
+        $('#check_direccion_anterior').prop('checked', false).trigger('change')
+    }
+})
+
+$('#check_direccion_residencia').change(function(event) {
+   prop = $(this).prop('checked')
+    if (prop == true){
+        $('#botones').hide()
+        $('#parte_editar').show()
+        $('#direccion_residencia').val(true)
+    }else{
+        $('#botones').show()
+        $('#parte_editar').hide()
+        $('#direccion_residencia').val(false)
+    }
+});
+
+
+$('#check_direccion_trabajo').change(function(event) {
+   prop = $(this).prop('checked')
+    if (prop == true){
+        $('#botones').hide()
+        $('#parte_editar').show()
+        $('#direccion_trabajo').val(true)
+    }else{
+        $('#botones').show()
+        $('#parte_editar').hide()
+        $('#direccion_trabajo').val(false)
+    }
+});
+
+$('#editar').click(function(event) {
+    texto = $(this).text()
+    if(texto == 'EDITAR CLIENTE'){
+        $('.original').hide()
+        $('.editar').removeClass('hidden')
+        $('.editar').show()
+
+        $('#botones').hide()
+        $('#parte_editar').show()
+
+        $('#editar_cliente').val(true)
+        $(this).text('CANCELAR EDICION')
+    }else{
+        $('.original').show()
+        $('.editar').hide()
+
+        $('#botones').show()
+        $('#parte_editar').hide()
+
+        $('#editar_cliente').val(false)
+        $(this).text('EDITAR CLIENTE')
+    }
+});
+
+    $('#tabla_cliente').DataTable({
+        "paging": true,
+        "lengthChange": false,
+        "searching": true,
+        "ordering": true,
+        "info": false,
+        "autoWidth": false
+    });
+
+    $('#btn-rechazado').click(function() {
+        $('#metodo').val('rechazar')
+    });
+
+
+
+function tabla(){
+$('#tabla_cliente tbody').on( 'click', 'tr', function () {
+    $('#tabla_cliente tr').removeClass('active')
+    $(this).addClass('active')
+      codigo = $(this).data('codigo')  
+      gestion = $(this).data('gestion')  
+
+      $.ajax({
+         url: "{% url 'revision_calidad' %}",
+         data: { 
+            codigo: codigo
+         }
+      })
+      .done(function( data ) {
+
+        $('#editar_cliente').val(false)
+        $('#editar').text('EDITAR CLIENTE')
+        $('.original').show()
+        $('.editar').hide()
+        $('#botones').show()
+        $('#parte_editar').hide()
+        $('#check_direccion_residencia').prop('checked', false).trigger('change')
+        $('#check_direccion_trabajo').prop('checked', false).trigger('change')
+
+
+        $('#cliente_historico').val(data.historico.id)
+        $('#codigo_cliente').val(data.historico.codigo)
+        $('#gestion').val(gestion)
+
+        $('#codigo').text(data.cliente.codigo)
+        $('#agente').text(data.historico.agente__first_name + ' ' +  data.historico.agente__last_name)
+        $('#rifa').text(data.historico.rifa)
+        $('#identidad').text(data.cliente.identidad)
+        $('#nombre').text(data.cliente.primer_nombre + ' ' + data.cliente.primer_apellido + ' ' + data.cliente.segundo_apellido)
+        $('#modal').modal('show')
+        $('#data').text('')
+
+        date = data.historico.fecha_actualizacion.split('T')
+        $('#fecha_actualizacion').text(date[0])
+
+        switch (data.cliente.estado_civil) {
+            case 2:
+                cliente_estado = "CASADO(A)";
+                break; 
+            case 3:
+                cliente_estado = "UNION LIBRE";
+                break;  
+            case 4:
+                cliente_estado = "DIVORCIADO(A)";
+                break;  
+            case 5:
+                cliente_estado = "VIUDO(A)";
+                break; 
+            default: 
+                cliente_estado = "SOLTERO(A)";
+        }
+
+        switch (data.historico.estado_civil) {
+            case 2:
+                historico_estado = "CASADO(A)";
+                break; 
+            case 3:
+                historico_estado = "UNION LIBRE";
+                break;  
+            case 4:
+                historico_estado = "DIVORCIADO(A)";
+                break;  
+            case 5:
+                historico_estado = "VIUDO(A)";
+                break; 
+            default: 
+                historico_estado = "SOLTERO(A)";
+        }
+
+
+
+        switch (data.cliente.ingresos) {
+            case 1:
+                cliente_ingresos = "Menos de L 8000.00";
+                break; 
+            case 2:
+                cliente_ingresos = "De L.8000.01 a L.10,000.00";
+                break; 
+            case 3:
+                cliente_ingresos = "De L.10,000.01 a L.20,000.00";
+                break;  
+            case 4:
+                cliente_ingresos = "De L.20,000.01 en adelante";
+                break;  
+            default: 
+                cliente_ingresos = "No Contestó";
+        }
+
+        switch (data.historico.ingresos) {
+            case 1:
+                historico_ingresos = "Menos de L 8000.00";
+                break; 
+            case 2:
+                historico_ingresos = "De L.8000.01 a L.10,000.00";
+                break; 
+            case 3:
+                historico_ingresos = "De L.10,000.01 a L.20,000.00";
+                break;  
+            case 4:
+                historico_ingresos = "De L.20,000.01 en adelante";
+                break;  
+            default: 
+                historico_ingresos = "No Contestó";
+        }
+
+        string  =  '<table class="table table-hover">'
+        string  +=    '<thead>'
+        string  +=    '   <tr>'
+        string  +=    '       <th width="20%"> </th>'
+        string  +=    '       <th width="40%"> DATOS ANTIGUOS </th>'
+        string  +=    '       <th width="40%"> DATOS NUEVOS </th>'
+        string  +=    '   </tr>'
+        string  +=    '</thead>'
+        string  +=    '<tbody>'
+        string  +=    '   <tr>'
+        string  +=    '       <td class="text-bold"> Departamento </td>'
+        string  +=    '       <td> ' +  ((data.cliente.departamento__nombre == null || data.cliente.departamento__nombre == '') ? '<span class="label label-danger">VACIO</spam>' : data.cliente.departamento__nombre)  + ' </td>'
+        string  +=    '       <td class="original"> ' +  ((data.historico.departamento__nombre == null || data.historico.departamento__nombre == '') ? '<span class="label label-danger">VACIO</spam>' : data.historico.departamento__nombre)  + ' </td>'
+        string  +=    '       <td class="editar hidden"> ' +  ((data.historico.departamento__nombre == null || data.historico.departamento__nombre == '') ? '<span class="label label-danger">VACIO</spam>' : data.historico.departamento__nombre)  + ' </td>'
+        string  +=    '   </tr>'
+        string  +=    '   <tr>'
+        string  +=    '       <td class="text-bold"> Municipio </td>'
+        string  +=    '       <td> ' +  ((data.cliente.municipio__nombre == null || data.cliente.municipio__nombre == '') ? '<span class="label label-danger">VACIO</spam>' : data.cliente.municipio__nombre)  + ' </td>'
+        string  +=    '       <td class="original"> ' +  ((data.historico.municipio__nombre == null || data.historico.municipio__nombre == '') ? '<span class="label label-danger">VACIO</spam>' : data.historico.municipio__nombre)  + ' </td>'
+        string  +=    '       <td class="editar hidden"> ' +  ((data.historico.municipio__nombre == null || data.historico.municipio__nombre == '') ? '<span class="label label-danger">VACIO</spam>' : data.historico.municipio__nombre)  + ' </td>'
+        string  +=    '   </tr>'
+        string  +=    '   <tr>'
+        string  +=    '       <td class="text-bold"> Residencia </td>'
+        string  +=    '       <td> ' +  ((data.cliente.colonia == null || data.cliente.colonia == '') ? '<span class="label label-danger">VACIO</spam>' : data.cliente.colonia)  + ' </td>'
+        string  +=    '       <td class="original" id="colonia"> ' +  ((data.historico.colonia == null || data.historico.colonia == '') ? '<span class="label label-danger">VACIO</spam>' : data.historico.colonia)  + ' </td>'
+        string  +=    '       <td class="editar hidden"> <input type="text" class="form-control" id="input_colonia" name="colonia" value="' +  ((data.historico.colonia == null || data.historico.colonia == '') ? '' : data.historico.colonia)  + '" </input> </td>'
+        string  +=    '   </tr>'
+        string  +=    '   <tr>'
+        string  +=    '       <td class="text-bold"> Referencia </td>'
+        string  +=    '       <td> ' +  ((data.cliente.referencia == null || data.cliente.referencia == '') ? '<span class="label label-danger">VACIO</spam>' : data.cliente.referencia)  + ' </td>'
+        string  +=    '       <td class="original" id="referencia"> ' +  ((data.historico.referencia == null || data.historico.referencia == '') ? '<span class="label label-danger">VACIO</spam>' : data.historico.referencia)  + ' </td>'
+        string  +=    '       <td class="editar hidden"> <input type="text" class="form-control" id="input_referencia" name="referencia" value="' +  ((data.historico.referencia == null || data.historico.referencia == '') ? '' : data.historico.referencia)  + '" </input> </td>'
+        string  +=    '   </tr>'
+        string  +=    '   <tr>'
+        string  +=    '       <td class="text-bold"> Correo Electronico </td>'
+        string  +=    '       <td> ' +  ((data.cliente.correo_electronico == null || data.cliente.correo_electronico == '') ? '<span class="label label-danger">VACIO</spam>' : data.cliente.correo_electronico)  + ' </td>'
+        string  +=    '       <td class="original" id="correo_electronico"> ' +  ((data.historico.correo_electronico == null || data.historico.correo_electronico == '') ? '<span class="label label-danger">VACIO</spam>' : data.historico.correo_electronico)  + ' </td>'
+        string  +=    '       <td class="editar hidden"> <input type="text" class="form-control" id="input_correo_electronico" name="correo_electronico" value="' +  ((data.historico.correo_electronico == null || data.historico.correo_electronico == '') ? '' : data.historico.correo_electronico)  + '" </input> </td>'
+        string  +=    '   </tr>'
+        string  +=    '   <tr>'
+        string  +=    '       <td class="text-bold"> Telefono Fijo </td>'
+        string  +=    '       <td> ' +  ((data.cliente.telefono_fijo == null || data.cliente.telefono_fijo == '') ? '<span class="label label-danger">VACIO</spam>' : data.cliente.telefono_fijo)  + ' </td>'
+        string  +=    '       <td class="original" id="telefono_fijo"> ' +  ((data.historico.telefono_fijo == null || data.historico.telefono_fijo == '') ? '<span class="label label-danger">VACIO</spam>' : data.historico.telefono_fijo)  + ' </td>'
+        string  +=    '       <td class="editar hidden"> <input type="text" class="form-control" id="input_telefono_fijo" name="telefono_fijo" value="' +  ((data.historico.telefono_fijo == null || data.historico.telefono_fijo == '') ? '' : data.historico.telefono_fijo)  + '" </input> </td>'
+        string  +=    '   </tr>'
+        string  +=    '   <tr>'
+        string  +=    '       <td class="text-bold"> Telefono Celular </td>'
+        string  +=    '       <td> ' +  ((data.cliente.telefono_celular == null || data.cliente.telefono_celular == '') ? '<span class="label label-danger">VACIO</spam>' : data.cliente.telefono_celular)  + ' </td>'
+        string  +=    '       <td class="original" id="telefono_celular"> ' +  ((data.historico.telefono_celular == null || data.historico.telefono_celular == '') ? '<span class="label label-danger">VACIO</spam>' : data.historico.telefono_celular)  + ' </td>'
+        string  +=    '       <td class="editar hidden"> <input type="text" class="form-control" id="input_telefono_celular" name="telefono_celular" value="' +  ((data.historico.telefono_celular == null || data.historico.telefono_celular == '') ? '' : data.historico.telefono_celular)  + '" </input> </td>'
+        string  +=    '   </tr>'
+        string  +=    '   <tr>'
+        string  +=    '       <td class="text-bold"> Estado Civil </td>'
+        string  +=    '       <td> ' +  ((cliente_estado == null || cliente_estado == '') ? '<span class="label label-danger">VACIO</spam>' : cliente_estado)  + ' </td>'
+        string  +=    '       <td class="original"> ' +  ((historico_estado == null || historico_estado == '') ? '<span class="label label-danger">VACIO</spam>' : historico_estado)  + ' </td>'
+        string  +=    '       <td class="editar hidden"> ' +  ((historico_estado == null || historico_estado == '') ? '<span class="label label-danger">VACIO</spam>' : historico_estado)  + ' </td>'
+        string  +=    '   </tr>'
+        string  +=    '   <tr>'
+        string  +=    '       <td class="text-bold"> Profesión </td>'
+        string  +=    '       <td> ' +  ((data.cliente.profesion_cliente__descripcion == null || data.cliente.profesion_cliente__descripcion == '') ? '<span class="label label-danger">VACIO</spam>' : data.cliente.profesion_cliente__descripcion)  + ' </td>'
+        string  +=    '       <td class="original"> ' +  ((data.historico.profesion_cliente__descripcion == null || data.historico.profesion_cliente__descripcion == '') ? '<span class="label label-danger">VACIO</spam>' : data.historico.profesion_cliente__descripcion)  + ' </td>'
+        string  +=    '       <td class="editar hidden"> ' +  ((data.historico.profesion_cliente__descripcion == null || data.historico.profesion_cliente__descripcion == '') ? '<span class="label label-danger">VACIO</spam>' : data.historico.profesion_cliente__descripcion)  + ' </td>'
+        string  +=    '   </tr>'
+        string  +=    '   <tr>'
+        string  +=    '       <td class="text-bold"> Actividad Economica </td>'
+        string  +=    '       <td> ' +  ((data.cliente.actividad_cliente__descripcion == null || data.cliente.actividad_cliente__descripcion == '') ? '<span class="label label-danger">VACIO</spam>' : data.cliente.actividad_cliente__descripcion)  + ' </td>'
+        string  +=    '       <td class="original"> ' +  ((data.historico.actividad_cliente__descripcion == null || data.historico.actividad_cliente__descripcion == '') ? '<span class="label label-danger">VACIO</spam>' : data.historico.actividad_cliente__descripcion)  + ' </td>'
+        string  +=    '       <td class="editar hidden"> ' +  ((data.historico.actividad_cliente__descripcion == null || data.historico.actividad_cliente__descripcion == '') ? '<span class="label label-danger">VACIO</spam>' : data.historico.actividad_cliente__descripcion)  + ' </td>'
+        string  +=    '   </tr>'
+        string  +=    '   <tr>'
+        string  +=    '       <td class="text-bold"> Ingresos </td>'
+        string  +=    '       <td> ' +  ((cliente_ingresos == null || cliente_ingresos == '') ? '<span class="label label-danger">VACIO</spam>' : cliente_ingresos)  + ' </td>'
+        string  +=    '       <td class="original"> ' +  ((historico_ingresos == null || historico_ingresos == '') ? '<span class="label label-danger">VACIO</spam>' : historico_ingresos)  + ' </td>'
+        string  +=    '       <td class="editar hidden"> ' +  ((historico_ingresos == null || historico_ingresos == '') ? '<span class="label label-danger">VACIO</spam>' : historico_ingresos)  + ' </td>'
+        string  +=    '   </tr>'
+        string  +=    '   <tr>'
+        string  +=    '       <td class="text-bold"> Lugar Trabajo </td>'
+        string  +=    '       <td> ' +  ((data.cliente.lugar_trabajo == null || data.cliente.lugar_trabajo == '') ? '<span class="label label-danger">VACIO</spam>' : data.cliente.lugar_trabajo)  + ' </td>'
+        string  +=    '       <td class="original" id="lugar_trabajo"> ' +  ((data.historico.lugar_trabajo == null || data.historico.lugar_trabajo == '') ? '<span class="label label-danger">VACIO</spam>' : data.historico.lugar_trabajo)  + ' </td>'
+        string  +=    '       <td class="editar hidden"> <input type="text" class="form-control" id="input_lugar_trabajo" name="lugar_trabajo" value="' +  ((data.historico.lugar_trabajo == null || data.historico.lugar_trabajo == '') ? '' : data.historico.lugar_trabajo)  + '" </input> </td>'
+        string  +=    '   </tr>'
+        string  +=    '   <tr>'
+        string  +=    '       <td class="text-bold"> Cargo que Ocupa </td>'
+        string  +=    '       <td> <span class="label label-danger">VACIO</spam> </td>'
+        string  +=    '       <td class="original" id="puesto"> ' +  ((data.historico.puesto == null || data.historico.puesto == '') ? '<span class="label label-danger">VACIO</spam>' : data.historico.puesto)  + ' </td>'
+        string  +=    '       <td class="editar hidden"> <input type="text" class="form-control" id="input_puesto" name="puesto" value="' +  ((data.historico.puesto == null || data.historico.puesto == '') ? '' : data.historico.puesto)  + '" </input> </td>'
+        string  +=    '   </tr>'
+        string  +=    '   <tr>'
+        string  +=    '       <td class="text-bold"> Departamento Trabajo </td>'
+        string  +=    '       <td> ' +  ((data.cliente.departamento_trabajo__nombre == null) ? '<span class="label label-danger">VACIO</spam>' : data.cliente.departamento_trabajo__nombre)  + ' </td>'
+        string  +=    '       <td class="original"> ' +  ((data.historico.departamento_trabajo__nombre == null) ? '<span class="label label-danger">VACIO</spam>' : data.historico.departamento_trabajo__nombre)  + ' </td>'
+        string  +=    '       <td class="editar hidden"> ' +  ((data.historico.departamento_trabajo__nombre == null) ? '<span class="label label-danger">VACIO</spam>' : data.historico.departamento_trabajo__nombre)  + ' </td>'
+        string  +=    '   </tr>'
+        string  +=    '   <tr>'
+        string  +=    '       <td class="text-bold"> Municipio Trabajo </td>'
+        string  +=    '       <td> ' +  ((data.cliente.municipio_trabajo__nombre == null) ? '<span class="label label-danger">VACIO</spam>' : data.cliente.municipio_trabajo__nombre)  + ' </td>'
+        string  +=    '       <td class="original"> ' +  ((data.historico.municipio_trabajo__nombre == null) ? '<span class="label label-danger">VACIO</spam>' : data.historico.municipio_trabajo__nombre)  + ' </td>'
+        string  +=    '       <td class="editar hidden"> ' +  ((data.historico.municipio_trabajo__nombre == null) ? '<span class="label label-danger">VACIO</spam>' : data.historico.municipio_trabajo__nombre)  + ' </td>'
+        string  +=    '   </tr>'
+        string  +=    '   <tr>'
+        string  +=    '       <td class="text-bold"> Referencia Trabajo </td>'
+        string  +=    '       <td> ' +  ((data.cliente.referencia_trabajo == null || data.cliente.referencia_trabajo == '') ? '<span class="label label-danger">VACIO</spam>' : data.cliente.referencia_trabajo)  + ' </td>'
+        string  +=    '       <td class="original" id="referencia_trabajo"> ' +  ((data.historico.referencia_trabajo == null || data.historico.referencia_trabajo == '') ? '<span class="label label-danger">VACIO</spam>' : data.historico.referencia_trabajo)  + ' </td>'
+        string  +=    '       <td class="editar hidden"> <input type="text" class="form-control" id="input_referencia_trabajo" name="referencia_trabajo" value="' +  ((data.historico.referencia_trabajo == null || data.historico.referencia_trabajo == '') ? '' : data.historico.referencia_trabajo)  + '" </input> </td>'
+        string  +=    '   </tr>'
+        string  +=    '   <tr>'
+        string  +=    '       <td class="text-bold"> Telefono Trabajo </td>'
+        string  +=    '       <td> ' +  ((data.cliente.telefono_fijo_trabajo == null || data.cliente.telefono_fijo_trabajo == '') ? '<span class="label label-danger">VACIO</spam>' : data.cliente.telefono_fijo_trabajo)  + ' </td>'
+        string  +=    '       <td class="original" id="telefono_fijo_trabajo"> ' +  ((data.historico.telefono_fijo_trabajo == null || data.historico.telefono_fijo_trabajo == '') ? '<span class="label label-danger">VACIO</spam>' : data.historico.telefono_fijo_trabajo)  + ' </td>'
+        string  +=    '       <td class="editar hidden"> <input type="text" class="form-control" id="input_telefono_fijo_trabajo" name="telefono_fijo_trabajo" value="' +  ((data.historico.telefono_fijo_trabajo == null || data.historico.telefono_fijo_trabajo == '') ? '' : data.historico.telefono_fijo_trabajo)  + '" </input> </td>'
+        string  +=    '   </tr>'
+        string  +=    '   <tr>'
+        string  +=    '       <td class="text-bold"> Correo Trabajo </td>'
+        string  +=    '       <td> ' +  ((data.cliente.correo_electronico_trabajo == null || data.cliente.correo_electronico_trabajo == '') ? '<span class="label label-danger">VACIO</spam>' : data.cliente.correo_electronico_trabajo)  + ' </td>'
+        string  +=    '       <td class="original" id="correo_electronico_trabajo"> ' +  ((data.historico.correo_electronico_trabajo == null || data.historico.correo_electronico_trabajo == '') ? '<span class="label label-danger">VACIO</spam>' : data.historico.correo_electronico_trabajo)  + ' </td>'
+        string  +=    '       <td class="editar hidden"> <input type="text" class="form-control" id="input_correo_electronico_trabajo" name="correo_electronico_trabajo" value="' +  ((data.historico.correo_electronico_trabajo == null || data.historico.correo_electronico_trabajo == '') ? '' : data.historico.correo_electronico_trabajo)  + '" </input> </td>'
+        string  +=    '   </tr>'
+        string  +=    '</tbody>'
+        string  += '</table>'
+
+            
+        $('#data').append(string)
+      })
+  })
+}
+
+    $('#id_fecha').daterangepicker({
+        //autoUpdateInput: false,
+        singleDatePicker: true,
+        showDropdowns: true,
+        maxDate: moment(),
+        locale: {
+          format: 'YYYY-MM-DD',
+
+          daysOfWeek: [
+            "Do",
+            "Lu",
+            "Ma",
+            "Mi",
+            "Ju",
+            "Vi",
+            "Sa"
+        ],
+        monthNames: [
+            "Enero",
+            "Febrero",
+            "Marzo",
+            "Abril",
+            "Mayo",
+            "Junio",
+            "Julio",
+            "Agosto",
+            "Septiembre",
+            "Octubre",
+            "Noviembre",
+            "Diciembre"
+        ],
+        },
+    }).val('{{fecha}}');
+
+
+    jQuery(document).ready(function($) {
+        tabla()
+
+        $('#example tbody').on( 'click', 'tr', function () {
+            if ( $(this).hasClass('selected') ) {
+                $(this).removeClass('selected');
+            }
+            else {
+                table.$('tr.selected').removeClass('selected');
+                $(this).addClass('selected');
+            }
+        } );
+    });
+  
+</script>
+
+{% endblock %}

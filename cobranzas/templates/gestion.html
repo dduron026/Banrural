@@ -1,0 +1,207 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% load bootstrap %}
+
+{% block titulo-llamada %}
+  {% if not request.user|has_group:"SUC" and not request.user|has_group:"BO" %} 
+    {% include 'conteo_llamadas.html' %}
+  {% endif %}
+{% endblock %}
+
+{% block contenido %}
+<link rel="stylesheet" href="{% static 'css/custom.css' %}">
+<div class="loader"></div>
+<!-- ........................................................................................ -->
+<!-- DETALLE CLIENTES -->
+<div class="box box-success">
+   <div class="box-header with-border">
+      <h3 class="box-title">Gestionar Cliente </h3>
+      <a href="{{request.session.url}}" class="pull-right"> << Atras </a>
+   </div>
+   <div class="box-body">
+      <div class="row">
+        <div class="col-md-6">
+          Codigo Cliente: <b>{{cliente.cliente_interno}}</b><br>
+          Nombre Cliente: <b>{{cliente.nombre}}</b> <br><br>
+        </div>
+        <div class="col-md-6">
+          <button type="button" class="btn btn-warning pull-right" id="btn-agregar-telefono">Agregar Numero de Telefono</button>
+        </div>
+      </div>
+      
+      <span class="label label-success" id="exito" style="display: none; ">El mensaje se envio con exito</span>
+      <span class="label label-danger" id="error" style="display: none; ">El numero de telefono no cumple con los requisitos necesarios para enviar un mensaje</span>
+
+
+      <table class="table table-bordered" id="">
+         <tr>
+            <th>Tipo</th>
+            <th>Numero</th>
+            <th>Persona Referida</th>
+            <th>Mensaje</th>
+            <th>Llamar</th>
+            <th>Mensaje</th>
+         </tr>
+         {% for telefono in telefonos %}
+           <tr>
+              <td>{{telefono.tipo_telefono}}</td>
+              <td>{{telefono.telefono}}</td>
+              <td> {% if telefono.persona_referida != Null %} {{telefono.persona_referida}} {% endif %}</td>
+              <td> <input type="checkbox" disabled name="" value="" {% if telefono.mensaje == True %} checked="checked" {% endif %}> </td>
+              <td> <a href="{% url 'gestion_llamar' cliente.cliente telefono.telefono %}" class="btn btn-sm btn-success">Realizar LLamada</a> </td>
+              <td> <button type="button" class="btn btn-sm btn-success mensaje" {% if telefono.mensaje != True %} disabled="disabled" {% endif %} data-telefono="{{telefono.telefono}}" >Enviar Mensaje</button> </td>
+           </tr>
+         {% endfor %}
+      </table>
+   </div>
+</div>
+<!-- ........................................................................................ -->
+
+
+<!-- ........................................................................................ -->
+<!-- Modal MENSAJE -->
+<div class="modal fade" id="mensaje" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+   <div class="modal-dialog" role="document">
+      <div class="modal-content">
+         <form method="post" accept-charset="utf-8" id="formulario-pendiente">
+           <div class="modal-body">
+           <br>
+              <div class="row">
+                {% csrf_token %}
+                 <input type="hidden" name="hora-inicio" id="hora-inicio" value="">
+                 <div class="col-md-12">
+                    Envio de Mensaje al <b> <span id="span-identidad"> </span></b>
+                    <textarea class="form-control" rows="3" name="mensaje">Estimado Cliente,
+Recuerde que tiene una mora pendiente. Favor ir a la sucursal mas cercana.
+                    </textarea>
+                    <input type="hidden" name="telefono" id="telefono" value="">
+                    <input type="hidden" name="metodo" value="mensaje">
+                 </div>
+              </div>
+           </div>
+
+           <div class="modal-footer">
+             <button type="button" class="btn btn-default" data-dismiss="modal">Cancelar</button>
+             <button type="submit" class="btn btn-primary">Enviar Mensaje</button>
+           </div>
+          </form>
+      </div>
+   </div>
+</div>
+<!-- ........................................................................................ -->
+<div class="modal fade" id="modal-telefono" role="dialog" aria-labelledby="myModalLabel">
+   <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+         <div class="modal-header">
+            <button type="button" class="close cerrar-modal" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="myModalLabel">Agregar Numero Telefonico</h4>
+         </div>
+         <form method="post" accept-charset="utf-8" id="formulario-pendiente">
+            <div class="modal-body">
+               {% csrf_token %}
+               <input type="hidden" name="metodo" value="telefono">
+               <input type="hidden" name="hora-inicio" id="hora-inicio" value="">
+               <div class="row">
+                  <div class="col-sm-8">
+                     Codigo Cliente: <b>{{cliente.cliente_interno}}</b><br>
+                     Nombre Cliente: <b>{{cliente.nombre}}</b> <br>
+                  </div>
+               </div>
+               <p class="page-header"></p>
+               <div class="row">
+                  <div class="col-sm-6">
+                     <label class="col-xs-4 control-label">Tipo Telefono</label>
+                     <div class="col-xs-8">
+                        <div class="form-group">
+                           <select class="form-control" name="tipo_telefono" required>
+                              <option value="">---</option>
+                              {% for tipo in tipo_telefono %}
+                                 <option value="{{tipo.tipotelefono}}">{{tipo.descripcion}}</option>
+                              {% endfor %}
+                           </select>
+                        </div>
+                     </div>
+                  </div>
+                  <div class="col-sm-6">
+                     <label class="col-xs-4 control-label">Teléfono</label>
+                     <div class="col-xs-8">
+                        <input type="text" name="telefono" id="" class="form-control" required>
+                     </div>
+                  </div>
+               </div>
+               <div class="row">
+                  <div class="col-sm-6">
+                     <label class="col-xs-4 control-label">Habilitado para Mensaje</label>
+                     <div class="col-xs-8">
+                        <select class="form-control" name="mensaje" required>
+                           <option value="true">Si</option>
+                           <option value="false">No</option>
+                        </select>
+                     </div>
+                  </div>
+
+                  <div class="col-sm-6">
+                     <label class="col-xs-4 control-label">Persona Referida</label>
+                     <div class="col-xs-8">
+                        <input type="text" name="persona_referida" id="" class="form-control">
+                     </div>
+                  </div>
+               </div>
+            </div>
+
+            <div class="modal-footer">
+               <button type="submit" class="btn btn-success" id='btn-devolver'>Agregar Telefono</button>
+            </div>
+         </form>
+      </div>
+   </div>
+</div>
+<!-- ........................................................................................ -->
+
+<!-- AQUI SE INCLUYE EL CUADRO DE ABAJO DONDE ESTA EL DETALLE DE LOS MOVIMIENTOS DEL CLIENTE -->
+{% include 'detalle_cliente.html' %}
+
+<script>
+   
+    {% if mensaje == 'exito' %}
+      $('#exito').fadeIn('slow').delay(5000).fadeOut('slow');
+    {% endif %}
+
+    {% if mensaje == 'error' %}
+      $('#error').fadeIn('slow').delay(5000).fadeOut('slow');
+    {% endif %}
+
+   $('#btn-agregar-telefono').click(function(){
+      event.preventDefault()
+      $('#modal-pendiente-tipo-gestion').val(3)
+
+      $('#modal-telefono').modal('show')
+   })
+   
+   function numberWithCommas(x) {
+       return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+   }
+
+   $('input[name=opcion]').change(function(event) {
+      $('.opcion').prop('disabled', true);
+      $('.'+$(this).attr('id')).prop('disabled', false );
+   });
+
+   //ESTE ES EL BOTON DE MENSAJE
+   $('button.mensaje').click(function(){
+      $('#telefono').val($(this).data('telefono'))
+      $('#span-identidad').text($(this).data('telefono'))
+      $('#mensaje').modal({backdrop: 'static', keyboard: false, show:true});
+
+   });
+
+   //SE PONE EN CERO EL CONTADOR
+   localStorage.setItem("hora", 0);
+   localStorage.setItem("minuto", 0);
+   localStorage.setItem("segundo", 0);
+   d = new Date();
+   localStorage.setItem("inicio", d.getHours() + ':' + d.getMinutes()  + ':' + d.getSeconds() )
+</script>
+
+
+{% endblock %}

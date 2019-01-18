@@ -1,0 +1,13 @@
+{% if gestiones %}
+   {% for gestion in gestiones %}
+      Total :  {% if gestion.total != None %} {{gestion.total}} {% else %} 0 {% endif %} |
+      Clientes Localizados : {% if gestion.total_localizado != None %} {{gestion.total_localizado}} {% else %} 0 {% endif %}   |
+      Clientes NO Localizados : {% if gestion.total_no_localizado != None %} {{gestion.total_no_localizado}} {% else %} 0 {% endif %}|
+      Clientes Pendientes : {% if gestion.total_pendiente != None %} {{gestion.total_pendiente}}  {% else %} 0 {% endif %}
+   {% endfor %}
+{% else %}
+   Total Llamadas : 0 |
+   Clientes Localizados : 0 |
+   Clientes NO Localizados : 0 |
+   Clientes Pendientes : 0
+{% endif %}

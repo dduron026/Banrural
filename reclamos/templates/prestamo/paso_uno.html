@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% load bootstrap %}
+
+{% block titulo %}
+{% endblock %}
+
+{% block contenido %}
+<link rel="stylesheet" href="{% static 'css/custom.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/select2/select2.min.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/select2/select2-bootstrap.min.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/bootstrap-datepicker/css/bootstrap-datepicker.css' %}">
+
+<script src="{% static 'plugins/bootstrap-datepicker/js/bootstrap-datepicker.js' %}"></script>
+<script src="{% static 'plugins/bootstrap-datepicker/locales/bootstrap-datepicker.es.min.js' %}"></script>
+<script src="{% static 'plugins/select2/select2.min.js' %}"></script>
+
+<style type="text/css">
+   label{
+      font-weight: normal !important;
+   }
+</style>
+
+<div class="loader"></div>
+
+<!-- RESPUESTA DEL CLIENTE -->
+<div class="box box-success">
+   <div class="box-header with-border">
+      <h3 class="box-title">Reclamo Cliente </h3>
+      <a href="{% url 'reclamo' %}" class="pull-right"> << Atras </a>
+   </div>
+   <div class="box-body">
+      <form method="post" class="form-horizontal" accept-charset="utf-8" id="formulario-direccion">
+         {% csrf_token %}
+         <input type="hidden" name="prestamo" id="id_prestamo">
+
+
+         <label for="inputEmail3" class="control-label"><b>LISTADOS DE PRESTAMOS</b></label>
+         <br><br>
+         <div class="row">
+            <div class="col-sm-7">
+               <table class="table">
+                  <thead>
+                     <tr>
+                        <th>No. Prestamo</th>
+                        <th>Producto</th>
+                        <th>Fecha Vigencia</th>
+                        <th>Moneda</th>
+                        <th>Cuenta</th>
+                        <th>Agencia</th>
+                        <th>Ejecutivo</th>
+                        <th></th>
+                     </tr>
+                  </thead>
+                  <tbody>
+                     {% for prestamo in prestamos %}
+                        <tr>
+                           <td>{{prestamo.credito}}</td>
+                           <td>{{prestamo.producto}}</td>
+                           <td>{{prestamo.fecha_vigencia}}</td>
+                           <td>{{prestamo.Moneda}}</td>
+                           <td>{{prestamo.cuenta}}</td>
+                           <td>{{prestamo.agencia}}</td>
+                           <td>{{prestamo.ejecutivo}}</td>
+                           <td><button type="submit" class="btn btn-default prestamo" data-prestamo='{{prestamo.credito}}'>Elegir Prestamo</button></td>
+                        </tr>
+                     {% endfor %}
+                  </tbody>
+               </table>
+            </div>
+         </div>
+      </form>
+      <br>
+      <br>
+   </div>
+</div>
+<!--........................................................................................ -->
+
+<script>
+   $('.submit').click(function(event) {
+      $('#myModal').modal('hide')
+      location.reload();
+   });
+
+   $('.prestamo').click(function(event) {
+      $('#id_prestamo').val($(this).attr('data-prestamo'))
+      return true
+   });
+</script>
+
+{% endblock %}

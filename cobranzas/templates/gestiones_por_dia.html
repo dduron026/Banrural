@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% load bootstrap %}
+
+{% block titulo-llamada %}
+   {% include 'conteo_llamadas.html' %}
+{% endblock %}
+
+{% block titulo %}
+{% endblock %}
+
+{% block contenido %}
+<link rel="stylesheet" href="{% static 'css/custom.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/datatables/dataTables.bootstrap.css' %}">
+<script src="{% static 'plugins/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'plugins/datatables/dataTables.bootstrap.min.js' %}"></script>
+
+
+<div class="loader"></div>
+   <!-- LISTADO DE CLIENTES -->
+   <div class="nav-tabs-custom">
+      <ul class="nav nav-tabs">
+         <li class="active"><a href="#tab_1" data-toggle="tab">Clientes Gestionados Hoy</a></li>
+         <h5 style="margin-right: 20px; margin-top: 15px" class="pull-right">Total Clientes: <strong>{{numeroClientes}}</strong></h5>
+
+      </ul>
+
+      <div class="tab-content">
+         <div class="tab-pane active no-padding" id="tab_1">
+         <!-- CLIENTES NORMALES -->  
+            <div>
+               <table class="table table-hover" id="tabla_cliente">
+                  <thead>
+                     <tr>
+                        <th class="text-center">Cod cliente</th>
+                        <th class="text-center">No. Credito</th>
+                        <th class="text-center">Producto</th>
+                        <th class="text-center">Nombre del cliente</th>
+                        <th class="text-center">Fecha resultado</th>
+                        <th class="text-center">Tipo de Gestion</th>
+                        <th class="text-center">Observaciones</th>
+                     </tr>
+                  </thead>
+                  <tbody>
+                     {% for cliente in gestiones_por_dia  %}
+                        <tr class="tr-cliente" data-id='{{cliente.cliente_id}}' data-nombre='{{cliente.nombre}}'>
+                           <td>{{cliente.cliente_interno}} </td>
+                           <td>{{cliente.cliente.credito}} </td>
+                           <td>{{cliente.cliente.producto_credito}} </td>
+                           <td>{{cliente.cliente.nombre}}</td>
+                           <td>{{cliente.fecha_inicio|date:"d/M/Y"}}</td>
+                           <td>{{cliente.tipo_gestion.descripcion}}</td>
+                           <td>{{cliente.observaciones}}</td>
+                        </tr>
+                     {% endfor %}
+                  </tbody>
+               </table>
+            </div>
+         </div>
+         
+      </div>
+   </div>
+<script type="text/javascript">
+   $(document).ready(function(){
+      $("#tabla_cliente").DataTable({
+      "order": [[ 6, "desc" ]],
+      "language": {
+            "lengthMenu": "_MENU_ registros",
+            "zeroRecords": "No se encontro ningun registro",
+            "info": "Pagina _PAGE_ de _PAGES_",
+            "infoEmpty": "No hay registros",
+            "infoFiltered": "(filtrado de _MAX_ registros)",
+            "search":         "Buscar:",
+            "paginate": {
+                 "first":      "Primero",
+                 "last":       "Ultimo",
+                 "next":       "Siguiente",
+                 "previous":   "Anterior"
+             },
+        }
+   });
+   });
+</script>
+{% endblock %}

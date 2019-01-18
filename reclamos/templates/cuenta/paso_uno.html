@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% load bootstrap %}
+
+{% block titulo %}
+{% endblock %}
+
+{% block contenido %}
+<link rel="stylesheet" href="{% static 'css/custom.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/select2/select2.min.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/select2/select2-bootstrap.min.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/bootstrap-datepicker/css/bootstrap-datepicker.css' %}">
+
+<script src="{% static 'plugins/bootstrap-datepicker/js/bootstrap-datepicker.js' %}"></script>
+<script src="{% static 'plugins/bootstrap-datepicker/locales/bootstrap-datepicker.es.min.js' %}"></script>
+<script src="{% static 'plugins/select2/select2.min.js' %}"></script>
+
+<style type="text/css">
+   label{
+      font-weight: normal !important;
+   }
+</style>
+
+<div class="loader"></div>
+
+<!-- RESPUESTA DEL CLIENTE -->
+<div class="box box-success">
+   <div class="box-header with-border">
+      <h3 class="box-title">Reclamo Cliente </h3>
+      <a href="{% url 'reclamo' %}" class="pull-right"> << Atras </a>
+   </div>
+   <div class="box-body">
+      <form method="post" class="form-horizontal" accept-charset="utf-8" id="formulario-direccion">
+         {% csrf_token %}
+         <input type="hidden" name="cuenta" id="id_cuenta">
+
+
+         <label for="inputEmail3" class="control-label"><b>LISTADOS DE CUENTAS</b></label>
+         <br><br>
+         <div class="row">
+            <div class="col-sm-7">
+               <table class="table">
+                  <thead>
+                     <tr>
+                        <th>No. Cuenta</th>
+                        <th>Tipo Cuenta</th>
+                        <th>Fecha Apertura</th>
+                        <th></th>
+                     </tr>
+                  </thead>
+                  <tbody>
+                     {% for cuenta in cuentas %}
+                        <tr>
+                           <td>{{cuenta.cuenta}}</td>
+                           <td>{{cuenta.tipo_cuenta}}</td>
+                           <td>{{cuenta.fecha_apertura}}</td>
+                           <td><button type="submit" class="btn btn-default cuenta" data-cuenta='{{cuenta.cuenta}}'>Elegir Cuenta</button></td>
+                        </tr>
+                     {% endfor %}
+                  </tbody>
+               </table>
+            </div>
+         </div>
+      </form>
+      <br>
+      <br>
+   </div>
+</div>
+<!--........................................................................................ -->
+
+<script>
+   $('.submit').click(function(event) {
+      $('#myModal').modal('hide')
+      location.reload();
+   });
+
+   $('.cuenta').click(function(event) {
+      $('#id_cuenta').val($(this).attr('data-cuenta'))
+      return true
+   });
+</script>
+
+{% endblock %}

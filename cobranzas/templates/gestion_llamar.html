@@ -1,0 +1,199 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% load bootstrap %}
+
+{% block titulo-llamada %}
+
+   {% if not request.user|has_group:"SUC" and not request.user|has_group:"BO" %} 
+      {% include 'conteo_llamadas.html' %}
+   {% endif %}
+{% endblock %}
+
+{% block contenido %}
+<link rel="stylesheet" href="{% static 'css/custom.css' %}">
+
+<div class="loader"></div>
+
+<!-- LISTADO DE  CLIENTES -->
+<div class="box box-success">
+   <div class="box-header with-border">
+      <h3 class="box-title">Gestionar Cliente </h3>
+      <a href="{% url 'gestion' cliente.cliente %}" class="pull-right"> << Atras </a>
+      <input id="url" type="hidden" value="{{request.session.url}}">
+   </div>
+   <div class="box-body">
+      <div class="row">
+            {% if not request.user|has_group:"SUC" and not request.user|has_group:"BO" %} 
+               <div class="col-sm-4 pull-right">
+                  <b><p> [
+                     <span class="hour">00</span>
+                     <span class="divider">:</span>
+                     <span class="minute">00</span>
+                     <span class="divider">:</span>
+                     <span class="second">00</span>
+                     ]
+                  </p></b>
+               </div> 
+            {% endif %} 
+         <div class="col-sm-8">
+            Codigo Cliente: <b>{{cliente.cliente_interno}}</b><br>
+            Nombre Cliente: <b>{{cliente.nombre}}</b> <br>
+            Numero: <b> {{tel}} </b> <br><br>
+         </div>
+      </div>
+      <div align="center">
+         <a href="{% url 'gestion_localizado' cliente.cliente tel %}" class="btn btn-success btn-lg"> Cliente Localizado </a>
+         <button type="button" class="btn btn-danger btn-lg" id="btn-no-localizado">Cliente NO Localizado</button>
+      </div>
+      <br>
+      <br>
+   </div>
+</div>
+
+{% include 'detalle_cliente.html' %}
+
+<!-- ........................................................................................ -->
+<!-- Modal NO LOCALIZADO -->
+<div class="modal fade" id="modal-no-localizado" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+   <div class="modal-dialog" role="document">
+      <div class="modal-content">
+         <div class="modal-header">
+            <button type="button" class="close cerrar-modal" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="myModalLabel">Cliente No Localizado</h4>
+         </div>
+         <form method="post" accept-charset="utf-8" id="form-no-localizado">
+            <div class="modal-body">
+               {% csrf_token %}
+               <input type="hidden" name="hora-inicio" id="hora-inicio" value="">
+               <input type="hidden" name="razon" id="razon" value="">
+               <div class="row">
+                  <div class="col-sm-4 pull-right">
+
+                     {% if not request.user|has_group:"SUC" and not request.user|has_group:"BO" %}
+                     <b><p>  [
+                        <span class="hour">00</span>
+                        <span class="divider">:</span>
+                        <span class="minute">00</span>
+                        <span class="divider">:</span>
+                        <span class="second">00</span>
+                        ]
+                     </p></b>
+                     {% endif %}
+                  </div>
+                  <div class="col-sm-8 h4">
+                     <label> Cliente: </label> {{cliente.nombre}}  <span id="modal-no-localizado-nombre" ></span> <br>
+                     <label> Numero: </label>{{tel}} <span id="modal-no-localizado-numero" ></span> <br><br>
+                  </div>
+               </div>
+
+               <div align="center">
+                  <p> <b> RAZONES CLIENTE NO LOCALIZADO </b> </p>
+                  <div class="row box-body">
+                     <div class="row">
+                        <div class="col-md-6"><button type="button" class="btn btn-primary btn-lg btn-block form-group no-localizado" data-id='1'>Número Equivocado</button></div>
+                        <div class="col-md-6"><button type="button" class="btn btn-primary btn-lg btn-block form-group no-localizado" data-id='2'>Número Ocupado</button></div>
+                     </div>
+                     <br>
+                     <div class="row">
+                        <div class="col-md-6"><button type="button" class="btn btn-primary btn-lg btn-block form-group no-localizado" data-id='3'>Teléfono Desactivo</button></div>
+                        <div class="col-md-6"><button type="button" class="btn btn-primary btn-lg btn-block form-group no-localizado" data-id='4'>No Contesta</button></div>
+                     </div>
+                     <br>
+                     <div class="row">
+                        <div class="col-md-6"><button type="button" class="btn btn-primary btn-lg btn-block form-group no-localizado" data-id='6'>Se dejó llamada de voz</button>
+                        </div>
+                        <div class="col-md-6"><button type="button" class="btn btn-primary btn-lg btn-block form-group no-localizado" data-id='5'>OTRO</button></div>
+                     </div>
+                     <br>
+                     <div class="row">
+                     <div class="col-md-12">
+                     <input type="text" class="form-control input-lg" name="comentarios" id="comentarios" value="" placeholder="Observaciones/Comentarios">
+                     </div> </div>
+                  </div>
+               </div>
+            </div>
+         </form>
+      </div>
+   </div>
+</div>
+<!-- ........................................................................................ -->
+
+<script>
+
+
+   $('#actualizar').click(function(event) {
+      $('.loader').show()
+      setTimeout(function() {
+         $('.loader').hide()
+      }, 3000);
+   });
+   
+   //EL BOTON NO LOCALIZADO
+   $('button#btn-no-localizado').click(function(){
+      $('#modal-no-localizado').modal({backdrop: 'static', keyboard: false, show:true})
+   })
+
+   //Click en las razones
+   $('.no-localizado').click(function(event) {
+      event.preventDefault()
+      $('#razon').val($(this).attr('data-id'))
+      $('.no-localizado').prop('disabled', true)
+      //console.log('alksjdlask')
+      document.getElementById("form-no-localizado").submit();
+      //$('#form-no-localizado').submit()
+   });
+
+   $('input[name=hora-inicio]').val(localStorage.getItem("inicio"))
+
+   tiempo = {
+     hora: localStorage.getItem("hora"),
+     minuto: localStorage.getItem("minuto"),
+     segundo: localStorage.getItem("segundo")
+   };    
+ 
+
+   tiempo_corriendo = setInterval(function(){
+      // Segundos
+      tiempo.segundo++;
+      if(tiempo.segundo >= 60)
+      {
+        tiempo.segundo = 0;
+        tiempo.minuto++;
+      }      
+
+      // Minutos
+      if(tiempo.minuto >= 60)
+      {
+        tiempo.minuto = 0;
+        tiempo.hora++;
+      }
+
+      $(".hour").text(tiempo.hora < 10 ? '0' + tiempo.hora : tiempo.hora);
+      $(".minute").text(tiempo.minuto < 10 ? '0' + tiempo.minuto : tiempo.minuto);
+      $(".second").text(tiempo.segundo < 10 ? '0' + tiempo.segundo : tiempo.segundo);
+
+
+      localStorage.setItem("hora", tiempo.hora);
+      localStorage.setItem("minuto", tiempo.minuto);
+      localStorage.setItem("segundo", tiempo.segundo);
+
+   }, 1000);
+
+   var myDate = new Date();
+   var displayDate = myDate.getHours()  + ':' + (myDate.getMinutes()) + ':' + (myDate.getSeconds()) ;
+   $('#hora-inicio').val(displayDate)
+
+   /*var inputUrl = document.getElementById("url");
+   console.log("EL INPUT URL",inputUrl);
+   var valorUrl = inputUrl.value.substring(0,12)
+   if (valorUrl == "/cobranzasbo") {
+      var relojContador = document.getElementById("relojContador");
+      relojContador.style.display = "none";
+   }
+   else{
+      console.log("Estoy en otras paginas");
+   }*/
+   
+</script>
+
+{% endblock %}

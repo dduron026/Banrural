@@ -1,0 +1,228 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% load bootstrap %}
+
+{% block titulo %}
+{% endblock %}
+
+{% block contenido %}
+<link rel="stylesheet" href="{% static 'css/custom.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/select2/select2.min.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/select2/select2-bootstrap.min.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/bootstrap-datepicker/css/bootstrap-datepicker.css' %}">
+
+<script src="{% static 'plugins/bootstrap-datepicker/js/bootstrap-datepicker.js' %}"></script>
+<script src="{% static 'plugins/bootstrap-datepicker/locales/bootstrap-datepicker.es.min.js' %}"></script>
+<script src="{% static 'plugins/select2/select2.min.js' %}"></script>
+
+<style type="text/css">
+   label{
+      font-weight: normal !important;
+   }
+</style>
+
+<div class="loader"></div>
+<!-- ........................................................................................ -->
+<!-- DETALLE CLIENTES -->
+<div class="box box-success">
+   <div class="box-header with-border">
+      <h3 class="box-title">Gestionar Cliente </h3>
+      <a href="{% url 'gestionesbo' cliente.cliente %}" class="pull-right"> << Atras </a>
+   </div>
+   <div class="box-body">
+      <div class="row">
+            <div class="col-sm-4 pull-right">
+               
+               <div>
+                  <button type="button" class="btn btn-default btn-block" id="btn-agregar-telefono">Agregar Dirección</button>
+               </div>
+            </div>
+            <div class="col-sm-8">
+               Credito: <b>{{cliente.credito}}</b> <br>
+               Nombre Cliente: <b>{{cliente.nombre}}</b> <br>
+               
+            </div>
+         </div>
+
+      <table class="table table-bordered" id="">
+         <tr>
+            <th>Tipo</th>
+            <th>Direccion</th>
+            <th>Registro</th>
+         </tr>
+         {% for direccion in direcciones %}
+           <tr>
+              <td>{{direccion.tipo_direcciones__descripcion}}</td>
+              <td>{{direccion.direccion}}</td>
+               {% if cliente.dias_atraso <= 29 %}
+                  <td> <a  href="http://dwhsrv/reports/report/Notas%20de%20Cobro/Nota%20de%20Cobro%20-%2015%20dias?fecha={{hoy}}&direccion={{direccion.direccion}}&nombre_cliente={{cliente.nombre}}&credito={{cliente.credito}}&saldo={{cliente.saldo_total_creditos}}&usuario={{request.user.pk}}" class="btn btn-sm btn-success">Generar Nota de Cobro</a></td>
+               {% elif cliente.dias_atraso >= 60 and  cliente.dias_atraso <= 89   %}
+                  <td> <a  href="http://dwhsrv/reports/report/Notas%20de%20Cobro/Nota%20de%20Cobro%20-%2060%20dias?fecha={{hoy}}&direccion={{direccion.direccion}}&nombre_cliente={{cliente.nombre}}&credito={{cliente.credito}}&saldo={{cliente.saldo_total_creditos}}&usuario={{request.user.pk}}" class="btn btn-sm btn-success">Generar Nota de Cobro</a></td>
+               {% elif  cliente.dias_atraso >= 30 and  cliente.dias_atraso <= 59 %}
+                  <td> <a href="http://dwhsrv/reports/report/Notas%20de%20Cobro/Nota%20de%20Cobro%20-%2030%20dias?fecha={{hoy}}&direccion={{direccion.direccion}}&nombre_cliente={{cliente.nombre}}&credito={{cliente.credito}}&saldo={{cliente.saldo_total_creditos}}&usuario={{request.user.pk}}" class="btn btn-sm btn-success">Generar Nota de Cobro</a></td>
+               {% elif cliente.dias_atraso >= 90   %}
+                  <td> <a  href="http://dwhsrv/reports/report/Notas%20de%20Cobro/Nota%20de%20Cobro%20-%2090%20dias?fecha={{hoy}}&direccion={{direccion.direccion}}&nombre_cliente={{cliente.nombre}}&credito={{cliente.credito}}&saldo={{cliente.saldo_total_creditos}}&usuario={{request.user.pk}}" class="btn btn-sm btn-success">Generar Nota de Cobro</a></td>
+               {% endif %}
+           </tr>
+         {% endfor %}
+
+      </table>
+   </div>
+</div>
+
+<!-- Modal AGREGAR DIRECCION -->
+<div class="modal fade" id="modal-direccion" role="dialog" aria-labelledby="myModalLabel">
+   <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+         <div class="modal-header">
+            <button type="button" class="close cerrar-modal" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="myModalLabel">Agregar Dirección</h4>
+         </div>
+         <form method="post" accept-charset="utf-8" id="formulario-direccion">
+            <div class="modal-body">
+               {% csrf_token %}
+               <input type="hidden" name="metodo" value="direccion">
+               <div class="row">
+                  <div class="col-sm-8">
+                     Codigo Cliente: <b>{{cliente.cliente_interno}}</b><br>
+                     Nombre Cliente: <b>{{cliente.nombre}}</b> <br>
+                  </div>
+               </div>
+               <p class="page-header"></p>
+               <div class="row">
+                  <div class="col-sm-6">
+                     <label class="col-xs-4 control-label">Tipo Dirección</label>
+                     <div class="col-xs-8">
+                        <div class="form-group">
+                           <select id="tipo_direccion" class="form-control" name="tipo_direccion">
+                              <option value="">---</option>
+                              {% for tipo in tipos_direcciones %}
+                                 <option value="{{tipo.tipo_direcciones}}">{{tipo.descripcion}}</option>
+                              {% endfor %}
+                           </select>
+                        </div>
+                     </div>
+                  </div>
+                  <div class="col-sm-6">
+                     <label class="col-xs-4 control-label">Departamento</label>
+                     <div class="col-xs-8">
+                        <div class="form-group">
+                           <select id="departamento" class="form-control" name="departamento" >
+                              <option value=>---</option>
+                              {% for departamento in departamentos %}
+                                 <option value="{{departamento.codigo}}">{{departamento.descripcion}}</option>
+                              {% endfor %}
+                           </select>
+                        </div>
+                     </div>
+                  </div>
+                  <div class="col-sm-6">
+                     <label class="col-xs-4 control-label">Municipio</label>
+                     <div class="col-xs-8">
+                        <div class="form-group">
+                           <select id="municipio" class="form-control" name="municipio">
+                             
+                              
+                           </select>
+                        </div>
+                     </div>
+                  </div>
+                  <div class="col-sm-6">
+                     <label class="col-xs-4 control-label">Colonia</label>
+                     <div class="col-xs-8">
+                        <div class="form-group">
+                           <select id="colonia" class="form-control" name="colonia" >
+                              
+                              
+                           </select>
+                        </div>
+                     </div>
+                  </div>
+                  <div class="col-sm-6">
+                     <label class="col-xs-4 control-label">Dirección</label>
+                     <div class="col-xs-8">
+                        <input id="direccion" type="text" name="direccion" id="" class="form-control" >
+                     </div>
+                  </div>
+               </div>
+            </div>
+
+            <div class="modal-footer">
+               <button type="submit" class="btn btn-success" id='btn-devolver'>Agregar Dirección</button>
+            </div>
+         </form>
+      </div>
+   </div>
+</div>
+<!-- ........................................................................................ -->
+
+
+
+{% include 'detalle_cliente.html' %}
+<script type="text/javascript">
+  $('#actualizar').click(function(event) {
+      $('.loader').show()
+      setTimeout(function() {
+         $('.loader').hide()
+      }, 3000);
+   });
+
+  $('#tipo_direccion, #departamento, #municipio, #colonia').select2({
+      theme : 'bootstrap',
+      width : '100%'
+   });
+
+  $('#btn-agregar-telefono').click(function(){
+    $('#modal-direccion').modal('show')
+   });
+
+  function direccion(tabla, valor, select){
+         $('#' + select).empty();
+         $('#' + select).append("<option value=''>---------------</option>");
+        
+         valor= $('#'+valor).val()
+         $.ajax({
+            type: "GET",
+           data:
+               { tabla: tabla, valor: valor },
+            url: "",
+            success: function(msg){
+               $.each(msg, function(key, val){
+                  $('#' + select).append("<option value="+val.municipio+">" + '' + val.descripcion +"</option>");
+               });
+                  $('#' + select).trigger("chosen:updated");
+
+                  console.log(msg)
+            }
+         });
+      }
+
+      function direccioncolonia(tabla, valor, select){
+         $('#' + select).empty();
+         $('#' + select).append("<option value=''>---------------</option>");
+        
+         valor= $('#'+valor).val()
+         $.ajax({
+            type: "GET",
+           data:
+               { tabla: tabla, valor: valor },
+            url: "",
+            success: function(msg){
+               $.each(msg, function(key, val){
+                  $('#' + select).append("<option value="+val.colonia+">" + '' + val.descripcion +"</option>");
+               });
+                  $('#' + select).trigger("chosen:updated");
+
+                  console.log(msg)
+            }
+         });
+      }
+       
+      $('#departamento').change(function(){
+         direccion('municipio', 'departamento', 'municipio' )
+      })
+      $('#municipio').change(function(){
+         direccioncolonia('colonia', 'municipio', 'colonia' )
+      })
+</script>
+{% endblock %}

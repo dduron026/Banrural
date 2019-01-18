@@ -1,0 +1,232 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% load bootstrap %}
+
+{% block titulo %}
+{% endblock %}
+
+{% block contenido %}
+<link rel="stylesheet" href="{% static 'css/custom.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/select2/select2.min.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/select2/select2-bootstrap.min.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/bootstrap-datepicker/css/bootstrap-datepicker.css' %}">
+
+<script src="{% static 'plugins/bootstrap-datepicker/js/bootstrap-datepicker.js' %}"></script>
+<script src="{% static 'plugins/bootstrap-datepicker/locales/bootstrap-datepicker.es.min.js' %}"></script>
+<script src="{% static 'plugins/select2/select2.min.js' %}"></script>
+
+<style type="text/css">
+   label{
+      font-weight: normal !important;
+   }
+</style>
+
+<div class="loader"></div>
+
+<!-- RESPUESTA DEL CLIENTE -->
+<div class="box box-success">
+   <div class="box-header with-border">
+      <h3 class="box-title">Gestion Judicial </h3>
+      <a href="{% url 'gestionesbo' cliente.cliente %}" class="pull-right"> << Atras </a>
+   </div>
+   <div class="box-body">
+      <form method="post" accept-charset="utf-8" id="formulario-direccion" enctype="multipart/form-data">
+         {% csrf_token %}
+         <input type="hidden" name="metodo" value="judicial">
+         <input type="hidden" name="hora-inicio" id="hora-inicio" value="">
+         <div class="row">
+            <div class="col-sm-8">
+               Codigo Cliente: <b>{{cliente.cliente_interno}}</b><br>
+               Nombre Cliente: <b>{{cliente.nombre}}</b> <br>
+            </div>
+         </div>
+         <p class="page-header"></p>
+         <p class="text-center sub-style">
+            TRASLADAR
+         </p>
+         <p class="page-header"></p>
+         <div class="row">
+            <div class="col-sm-12">
+               <br> <b> Traslado a Bufete: </b> <br>
+               <select name="bufete" class="form-control" required>
+                  <option value="">------------</option>
+                  {% for data in bufetes %}
+                     <option value="{{data.bufete}}"> {{data.descripcion}} </option>
+                  {% endfor %}
+               </select>
+            </div>
+         </div>
+         <div class="row">
+            <div class="col-sm-12">
+               <br> <b> Anexos: </b> <br>
+               <input type="file" name="adjunto" value="" placeholder="" required>
+            </div>
+         </div>
+         <div class="row">
+            <div class="col-sm-12">
+               <br> <b> Observaciones: </b> <br>
+               <textarea name="observaciones" rows="5" class="form-control" width="100%" required></textarea>
+            </div>
+         </div>
+
+
+         <br>
+         <button id="guardar" type="submit" class="btn btn-success" id='btn-actualizar'>Trasladar a Judicial</button>
+      </form>
+      <br>
+      <br>
+   </div>
+</div>
+<!--........................................................................................ -->
+<!-- Modal AGREGAR DIRECCION -->
+<div class="modal fade" id="modal-direccion" role="dialog" aria-labelledby="myModalLabel">
+   <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+         <div class="modal-header">
+            <button type="button" class="close cerrar-modal" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="myModalLabel">Agregar Dirección</h4>
+         </div>
+         <form method="post" accept-charset="utf-8" id="formulario-direccion">
+            <div class="modal-body">
+               {% csrf_token %}
+               <input type="hidden" name="metodo" value="direccion">
+               <div class="row">
+                  <div class="col-sm-8">
+                     Codigo Cliente: <b>{{cliente.cliente_interno}}</b><br>
+                     Nombre Cliente: <b>{{cliente.nombre}}</b> <br>
+                  </div>
+               </div>
+               <p class="page-header"></p>
+               <div class="row">
+                  <div class="col-sm-6">
+                     <label class="col-xs-4 control-label">Tipo Dirección</label>
+                     <div class="col-xs-8">
+                        <div class="form-group">
+                           <select id="tipo_direccion" class="form-control" name="tipo_direccion" required>
+                              <option value="">---</option>
+                              {% for tipo in tipo_direccion %}
+                                 <option value="{{tipo.tipo_direcciones}}">{{tipo.descripcion}}</option>
+                              {% endfor %}
+                           </select>
+                        </div>
+                     </div>
+                  </div>
+                  <div class="col-sm-6">
+                     <label class="col-xs-4 control-label">Departamento</label>
+                     <div class="col-xs-8">
+                        <div class="form-group">
+                           <select id="departamento" class="form-control" name="departamento" required>
+                              <!-- <option value="">---</option>
+                              {% for tipo in tipo_direccion %}
+                                 <option value="{{tipo.tipo_direcciones}}">{{tipo.descripcion}}</option>
+                              {% endfor %} -->
+                           </select>
+                        </div>
+                     </div>
+                  </div>
+                  <div class="col-sm-6">
+                     <label class="col-xs-4 control-label">Municipio</label>
+                     <div class="col-xs-8">
+                        <div class="form-group">
+                           <select id="municipio" class="form-control" name="municipio" required>
+                              <!-- <option value="">---</option>
+                              {% for tipo in tipo_direccion %}
+                                 <option value="{{tipo.tipo_direcciones}}">{{tipo.descripcion}}</option>
+                              {% endfor %} -->
+                              
+                           </select>
+                        </div>
+                     </div>
+                  </div>
+                  <div class="col-sm-6">
+                     <label class="col-xs-4 control-label">Colonia</label>
+                     <div class="col-xs-8">
+                        <div class="form-group">
+                           <select id="colonia" class="form-control" name="colonia" required>
+                              <!-- <option value="">---</option>
+                              {% for tipo in tipo_direccion %}
+                                 <option value="{{tipo.tipo_direcciones}}">{{tipo.descripcion}}</option>
+                              {% endfor %} -->
+                              
+                           </select>
+                        </div>
+                     </div>
+                  </div>
+                  <div class="col-sm-6">
+                     <label class="col-xs-4 control-label">Dirección</label>
+                     <div class="col-xs-8">
+                        <input id="direccion" type="text" name="direccion" id="" class="form-control" required>
+                     </div>
+                  </div>
+               </div>
+            </div>
+
+            <div class="modal-footer">
+               <button type="submit" class="btn btn-success" id='btn-devolver'>Agregar Dirección</button>
+            </div>
+         </form>
+      </div>
+   </div>
+</div>
+<!-- ........................................................................................ -->
+
+
+{% include 'detalle_cliente.html' %}
+
+
+<script>
+   
+
+   $('#actualizar').click(function(event) {
+      $('.loader').show()
+      setTimeout(function() {
+         $('.loader').hide()
+      }, 3000);
+   });
+
+   $('#tipo_direccion, #departamento, #municipio, #colonia').select2({
+      theme : 'bootstrap',
+      width : '100%'
+   });
+
+   $('#fecha, #id_fecha').datepicker({
+      format: 'yyyy-mm-dd',
+      language: 'es',
+      autoclose: true,
+   });
+
+   $('input[name=opcion]').change(function(event) {
+      $('.opcion').prop('disabled', true);
+      $('.'+$(this).attr('id')).prop('disabled', false );
+   });
+
+   $('#btn-agregar-telefono').click(function(){
+    $('#modal-direccion').modal('show')
+   })
+
+      function direccion(tabla, valor, select){
+         $('#' + select).empty();
+         $('#' + select).append("<option value=''>---------------</option>");
+        
+         valor= $('#'+valor).val()
+         $.ajax({
+            type: "GET",
+           data:
+               { tabla: tabla, valor: valor },
+            url: "/cliente/ajax/",
+            success: function(msg){
+               $.each(msg, function(key, val){
+                  $('#' + select).append("<option value="+val.id+">" + '' + val.codigo + ' | ' + val.nombre + "</option>");
+               });
+                  $('#' + select).trigger("chosen:updated");
+            }
+         });
+      }
+       
+      $('#id_departamento').change(function(){
+         direccion('municipio', 'id_departamento', 'id_municipio' )
+      })
+   
+</script>
+
+{% endblock %}

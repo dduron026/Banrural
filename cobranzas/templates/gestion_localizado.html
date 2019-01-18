@@ -1,0 +1,448 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% load bootstrap %}
+
+{% block titulo-llamada %}
+   {% if not request.user|has_group:"SUC" and not request.user|has_group:"BO" %} 
+      {% include 'conteo_llamadas.html' %}
+   {% endif %}
+{% endblock %}
+
+{% block contenido %}
+<link rel="stylesheet" href="{% static 'css/custom.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/select2/select2.min.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/select2/select2-bootstrap.min.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/bootstrap-datepicker/css/bootstrap-datepicker.css' %}">
+
+<script src="{% static 'plugins/bootstrap-datepicker/js/bootstrap-datepicker.js' %}"></script>
+<script src="{% static 'plugins/bootstrap-datepicker/locales/bootstrap-datepicker.es.min.js' %}"></script>
+<script src="{% static 'plugins/select2/select2.min.js' %}"></script>
+
+<style type="text/css">
+   label{
+      font-weight: normal !important;
+   }
+</style>
+
+<div class="loader"></div>
+
+<!-- RESPUESTA DEL CLIENTE -->
+<div class="box box-success">
+   <div class="box-header with-border">
+      <h3 class="box-title">Gestionar Cliente </h3>
+      <a href="{% url 'gestion_llamar' cliente.cliente tel %}" class="pull-right"> << Atras </a>
+   </div>
+   <div class="box-body">
+      <form method="post" accept-charset="utf-8" id="formulario-llamada">
+         {% csrf_token %}
+         <input type="hidden" name="metodo" value="localizado">
+         <input type="hidden" name="hora-inicio" id="hora-inicio" value="">
+         <input type="hidden" value="{{request.session.url}}">
+         <div class="row">
+            <div class="col-sm-4 pull-right">
+            {% if not request.user|has_group:"SUC" and not request.user|has_group:"BO" %} 
+               <b><p> [
+                  <span class="hour">00</span>
+                  <span class="divider">:</span>
+                  <span class="minute">00</span>
+                  <span class="divider">:</span>
+                  <span class="second">00</span>
+                  ]
+               </p></b>
+            {% endif %}
+               <div>
+                  <button type="button" class="btn btn-warning btn-block" id="btn-devolver-llamada">Devolver Llamada</button>
+                  <button type="button" class="btn btn-default btn-block" id="btn-agregar-telefono">Agregar Numero de Telefono</button>
+               </div>
+            </div>
+            <div class="col-sm-8">
+               Codigo Cliente: <b>{{cliente.cliente_interno}}</b><br>
+               Nombre Cliente: <b>{{cliente.nombre}}</b> <br>
+               Numero: <b> {{tel}} </b> <br><br>
+            </div>
+         </div>
+         <p class="page-header"></p>
+         <p class="text-center sub-style">
+            RESPUESTA DEL CLIENTE
+         </p>
+         <p class="page-header"></p>
+         <div class="row">
+            <div class="col-sm-4">
+               <label>
+                  <input required type="radio" name="opcion" value="1" id="opcion_1">  Pagará en Fecha
+               </label>
+            </div>
+            <div class="col-sm-3">
+               <input type="text" name="razon_opcion" placeholder="" class="form-control fecha opcion opcion_1" disabled id="fecha">
+            </div>
+            <div class="col-sm-3">
+               <input type="number" name="monto_promesa" placeholder="Monto de la promesa" class="form-control  opcion opcion_1" disabled id="monto_promesa">
+            </div>
+         </div>
+         <div class="row">
+            <div class="col-sm-4">
+               <label>
+                  <input type="radio" name="opcion" value="2" id="opcion_2"> Pagará esta semana en
+               </label>
+            </div>
+            <div class="col-sm-3">
+               <select name="razon_opcion" class="opcion opcion_2" disabled id="select1">
+                  <option value=""> ------------ </option>
+                  {% for data in agencias %}
+                     <option value="{{data.codigo_agencia}}"> {{data.nombre_agencia}} </option>
+                  {% endfor %}
+               </select>
+            </div>
+         </div>
+         <div class="row">
+            <div class="col-sm-4">
+               <label>
+                  <input type="radio" name="opcion" value="3" id="opcion_3"> Cliente tiene reclamo e ira a sucursal
+               </label>
+            </div>
+            <div class="col-sm-3" >
+               <select name="razon_opcion" class="opcion opcion_3" disabled id="select2">
+                  
+                  <option value=""> ------------ </option>
+                  {% for data in agencias %}
+                     <option value="{{data.codigo_agencia}}"> {{data.nombre_agencia}} </option>
+                  {% endfor %}
+
+               </select>
+            </div>
+         </div>
+            <label>
+               <input type="radio" name="opcion" value="4" id="opcion_4"> Cliente quiere refinanciamiento <br>
+            </label>
+            <div class="row">
+               <div class="col-sm-4">
+                     <label>
+                        <input type="radio" name="opcion" value="5" id="opcion_5"> Mensaje con Tercero </label>
+               </div>
+            </div>
+            <div class="row">
+               <div class="col-sm-4">
+                     <label>
+                        <input type="radio" name="opcion" value="6" id="opcion_6"> Gestionado <label>
+               </div>
+            </div>
+
+
+         <div class="row">
+            <div class="col-sm-12">
+               <br> <b> Observaciones: </b> <br>
+               <textarea name="observaciones" rows="5" class="form-control" width="100%"></textarea>
+            </div>
+         </div>
+
+
+         <br>
+         <button type="submit" class="btn btn-success" id='btn-actualizar'>Guardar Respuesta Cliente</button>
+      </form>
+      <br>
+      <br>
+   </div>
+</div>
+
+<!-- ........................................................................................ -->
+<!-- Modal LLAMADA PENDIENTE -->
+<div class="modal fade" id="modal-pendiente" role="dialog" aria-labelledby="myModalLabel">
+   <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+         <div class="modal-header">
+            <button type="button" class="close cerrar-modal" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="myModalLabel">Devolver Llamada</h4>
+         </div>
+         <form method="post" accept-charset="utf-8" id="formulario-pendiente">
+            <div class="modal-body">
+               {% csrf_token %}
+               <input type="hidden" name="metodo" value="pendiente">
+               <input type="hidden" name="hora-inicio" id="hora-inicio" value="">
+               <div class="row">
+
+                  <div class="col-sm-4 pull-right">
+                  {% if not request.user|has_group:"SUC" and not request.user|has_group:"BO" %} 
+                     <b><p> [
+                        <span class="hour">00</span>
+                        <span class="divider">:</span>
+                        <span class="minute">00</span>
+                        <span class="divider">:</span>
+                        <span class="second">00</span>
+                        ]
+                     </p></b>
+                  {% endif %}
+                  </div>
+                  <div class="col-sm-8">
+                     Codigo Cliente: <b>{{cliente.cliente_interno}}</b><br>
+                     Nombre Cliente: <b>{{cliente.nombre}}</b> <br>
+                     Numero: <b> {{tel}} </b> <br>
+                  </div>
+               </div>
+               <p class="page-header"></p>
+               <div class="row">
+                  <div class="col-sm-6">
+                     <label for="id_municipio_trabajo" class="col-xs-4 control-label">Fecha</label>
+                     <div class="col-xs-8">
+                        <input type="" name="fecha" id="id_fecha" class="form-control" required>
+                     </div>
+                  </div>
+                  <div class="col-sm-6">
+                     <label for="id_municipio_trabajo" class="col-xs-4 control-label">Hora</label>
+                     <div class="col-xs-8">
+                        <div class="form-group form-inline">
+                           <select class="form-control"  id='tiempo1' name="hora" required>
+                              <option value="">---</option>
+                              <option value="1">1</option>
+                              <option value="2">2</option>
+                              <option value="3">3</option>
+                              <option value="4">4</option>
+                              <option value="5">5</option>
+                              <option value="6">6</option>
+                              <option value="7">7</option>
+                              <option value="8">8</option>
+                              <option value="9">9</option>
+                              <option value="10">10</option>
+                              <option value="11">11</option>
+                              <option value="1">12</option>
+                           </select>
+                           <select class="form-control"  id='tiempo2' name="minuto" required>
+                              <option value="">---</option>
+                              <option value=":00">00</option>
+                              <option value=":10">10</option>
+                              <option value=":20">20</option>
+                              <option value=":30">30</option>
+                              <option value=":40">40</option>
+                              <option value=":50">50</option>
+                           </select>
+                           <select class="form-control" id='tiempo3' name="tiempo" required>
+                              <option value="">---</option>
+                              <option value="am">AM</option>
+                              <option value="pm">PM</option>
+                           </select>
+                        </div>
+                     </div>
+                  </div>
+               </div>
+               <div class="row">
+                  <div class="col-sm-6">
+                     <label for="id_municipio_trabajo" class="col-xs-4 control-label">Nombre de Contacto</label>
+                     <div class="col-xs-8">
+                        <input type="" name="nombre_contacto" id="id_contacto" class="form-control" >
+                     </div>
+                  </div>
+                  <div class="col-sm-6">
+                     <label for="id_municipio_trabajo" class="col-xs-4 control-label">Número de Contacto</label>
+                     <div class="col-xs-8">
+                        <input type="number" step="1" name="telefono_contacto" id="id_telefono_contacto" onKeyPress="if(this.value.length==8)  return false;"  class="form-control">
+                     </div>
+                  </div>
+               </div>
+            </div>
+
+            <div class="modal-footer">
+               <button type="submit" class="btn btn-warning" id='btn-devolver'>Devolver Llamada</button>
+            </div>
+         </form>
+      </div>
+   </div>
+</div>
+<!-- ........................................................................................ -->
+
+<!-- ........................................................................................ -->
+<!-- Modal AGREGAR TELEFONO -->
+<div class="modal fade" id="modal-telefono" role="dialog" aria-labelledby="myModalLabel">
+   <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+         <div class="modal-header">
+            <button type="button" class="close cerrar-modal" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="myModalLabel">Agregar Numero Telefonico</h4>
+         </div>
+         <form method="post" accept-charset="utf-8" id="formulario-pendiente">
+            <div class="modal-body">
+               {% csrf_token %}
+               <input type="hidden" name="metodo" value="telefono">
+               <input type="hidden" name="hora-inicio" id="hora-inicio" value="">
+               <div class="row">
+                  <div class="col-sm-4 pull-right">
+                  {% if not request.user|has_group:"SUC" and not request.user|has_group:"BO" %} 
+                     <b><p> [
+                        <span class="hour">00</span>
+                        <span class="divider">:</span>
+                        <span class="minute">00</span>
+                        <span class="divider">:</span>
+                        <span class="second">00</span>
+                        ]
+                     </p></b>
+                  {% endif %}
+                  </div>
+                  <div class="col-sm-8">
+                     Codigo Cliente: <b>{{cliente.cliente_interno}}</b><br>
+                     Nombre Cliente: <b>{{cliente.nombre}}</b> <br>
+                     Numero: <b> {{tel}} </b> <br>
+                  </div>
+               </div>
+               <p class="page-header"></p>
+               <div class="row">
+                  <div class="col-sm-6">
+                     <label class="col-xs-4 control-label">Tipo Telefono</label>
+                     <div class="col-xs-8">
+                        <div class="form-group">
+                           <select class="form-control" name="tipo_telefono" required>
+                              <option value="">---</option>
+                              {% for tipo in tipo_telefono %}
+                                 <option value="{{tipo.tipotelefono}}">{{tipo.descripcion}}</option>
+                              {% endfor %}
+                           </select>
+                        </div>
+                     </div>
+                  </div>
+                  <div class="col-sm-6">
+                     <label class="col-xs-4 control-label">Teléfono</label>
+                     <div class="col-xs-8">
+                        <input type="text" name="telefono" id="" class="form-control" required>
+                     </div>
+                  </div>
+               </div>
+               <div class="row">
+                  <div class="col-sm-6">
+                     <label class="col-xs-4 control-label">Habilitado para Mensaje</label>
+                     <div class="col-xs-8">
+                        <select class="form-control" name="mensaje" required>
+                           <option value="true">Si</option>
+                           <option value="false">No</option>
+                        </select>
+                     </div>
+                  </div>
+
+                  <div class="col-sm-6">
+                     <label class="col-xs-4 control-label">Persona Referida</label>
+                     <div class="col-xs-8">
+                        <input type="text" name="persona_referida" id="" class="form-control" required>
+                     </div>
+                  </div>
+               </div>
+            </div>
+
+            <div class="modal-footer">
+               <button type="submit" class="btn btn-success" id='btn-devolver'>Agregar Telefono</button>
+            </div>
+         </form>
+      </div>
+   </div>
+</div>
+<!-- ........................................................................................ -->
+
+
+{% include 'detalle_cliente.html' %}
+
+
+<script>
+   $('input[name=hora-inicio]').val(localStorage.getItem("inicio"))
+   tiempo = {
+     hora: localStorage.getItem("hora"),
+     minuto: localStorage.getItem("minuto"),
+     segundo: localStorage.getItem("segundo")
+   };
+
+   tiempo_corriendo = setInterval(function(){
+      // Segundos
+      tiempo.segundo++;
+      if(tiempo.segundo >= 60)
+      {
+        tiempo.segundo = 0;
+        tiempo.minuto++;
+      }
+
+      // Minutos
+      if(tiempo.minuto >= 60)
+      {
+        tiempo.minuto = 0;
+        tiempo.hora++;
+      }
+
+      $(".hour").text(tiempo.hora < 10 ? '0' + tiempo.hora : tiempo.hora);
+      $(".minute").text(tiempo.minuto < 10 ? '0' + tiempo.minuto : tiempo.minuto);
+      $(".second").text(tiempo.segundo < 10 ? '0' + tiempo.segundo : tiempo.segundo);
+
+
+      localStorage.setItem("hora", tiempo.hora);
+      localStorage.setItem("minuto", tiempo.minuto);
+      localStorage.setItem("segundo", tiempo.segundo);
+   }, 1000);
+
+   $('#actualizar').click(function(event) {
+      $('.loader').show()
+      setTimeout(function() {
+         $('.loader').hide()
+      }, 3000);
+   });
+
+   $('#select1, #select2').select2({
+      theme : 'bootstrap',
+      width : '100%'
+   });
+
+   $('#fecha, #id_fecha').datepicker({
+      format: 'yyyy-mm-dd',
+      language: 'es',
+      autoclose: true,
+   });
+
+   $('input[name=opcion]').change(function(event) {
+      $('.opcion').prop('disabled', true);
+      $('.'+$(this).attr('id')).prop('disabled', false );
+   });
+
+   $('#btn-devolver').click(function(){
+      localStorage.setItem("hora", 0);
+      localStorage.setItem("minuto", 0);
+      localStorage.setItem("segundo", 0);
+      $(this).prop('disabled', true)
+      $('#formulario-pendiente').submit()
+   })
+
+   $('#btn-devolver-llamada').click(function(){
+      localStorage.setItem("hora", 0);
+      localStorage.setItem("minuto", 0);
+      localStorage.setItem("segundo", 0);
+      
+    event.preventDefault()
+    $('#modal-pendiente-tipo-gestion').val(3)
+
+
+    $('#modal-pendiente-numero').text($('#modal-localizado-numero').text())
+    $('#modal-pendiente-telefono').val($('#modal-localizado-numero').text())
+    $('#modal-pendiente-nombre').text($('#modal-localizado-nombre').text())
+    $('#modal-pendiente-inicio').val($('#modal-localizado-inicio').val())
+    $('#modal-pendiente-telefono').val($('#modal-localizado-telefono').val())
+    $('#modal-pendiente-cliente').val($('#modal-localizado-cliente').val())
+    $('#modal-pendiente-identidad').text($('#modal-localizado-identidad').text())
+    $('#modal-pendiente-sexo').text($('#modal-localizado-sexo').text())
+
+
+    $('#modal-localizado').modal('hide')
+    $('#modal-pendiente').modal('show')
+    //$('#formulario-llamada').submit()
+   })
+
+   $('#btn-agregar-telefono').click(function(){
+    event.preventDefault()
+    $('#modal-pendiente-tipo-gestion').val(3)
+
+
+    $('#modal-pendiente-numero').text($('#modal-localizado-numero').text())
+    $('#modal-pendiente-telefono').val($('#modal-localizado-numero').text())
+    $('#modal-pendiente-nombre').text($('#modal-localizado-nombre').text())
+    $('#modal-pendiente-inicio').val($('#modal-localizado-inicio').val())
+    $('#modal-pendiente-telefono').val($('#modal-localizado-telefono').val())
+    $('#modal-pendiente-cliente').val($('#modal-localizado-cliente').val())
+    $('#modal-pendiente-identidad').text($('#modal-localizado-identidad').text())
+    $('#modal-pendiente-sexo').text($('#modal-localizado-sexo').text())
+
+    $('#modal-telefono').modal('show')
+   })
+
+
+</script>
+
+{% endblock %}

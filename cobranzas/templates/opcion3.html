@@ -1,0 +1,304 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% load bootstrap %}
+
+{% block titulo-llamada %}
+   {% include 'conteo_llamadas.html' %}
+{% endblock %}
+
+{% block titulo %}
+{% endblock %}
+
+{% block contenido %}
+<script src="{% static 'plugins/select2/select2.min.js' %}"></script>
+<link rel="stylesheet" href="{% static 'plugins/select2/select2.min.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/select2/select2-bootstrap.min.css' %}">
+
+<link rel="stylesheet" href="{% static 'css/custom.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/datatables/dataTables.bootstrap.css' %}">
+<script src="{% static 'plugins/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'plugins/datatables/dataTables.bootstrap.min.js' %}"></script>
+
+<link rel="stylesheet" href="{% static 'plugins/bootstrap-datepicker/css/bootstrap-datepicker.css' %}">
+<script src="{% static 'plugins/bootstrap-datepicker/js/bootstrap-datepicker.js' %}"></script>
+<script src="{% static 'plugins/bootstrap-datepicker/locales/bootstrap-datepicker.es.min.js' %}"></script>
+
+<div class="loader"></div>
+   <!-- LISTADO DE CLIENTES -->
+   <div class="nav-tabs-custom">
+      <ul class="nav nav-tabs">
+         <li class="active"><a href="#tab_1" data-toggle="tab">Clientes en Mora</a></li>
+         <li><a href="#tab_2" data-toggle="tab">Clientes Pendientes</a></li>
+         <li><a href="#tab_3" data-toggle="tab">Promesa Pago {% if promesa > 0 %} <span class="label label-warning">{{promesa}}</span> {% endif %} </a></li>
+         <h5 style="margin-right: 20px; margin-top: 15px" class="pull-right">Total Clientes: <strong>{{numeroClientes}}</strong></h5>
+      </ul>
+      <div class="tab-content">
+         <div class="tab-pane active no-padding" id="tab_1">
+         <!-- CLIENTES NORMALES -->         
+            <div>
+            
+               <table class="table table-hover" id="tabla_cliente">
+                  <thead>
+                     <tr>
+                        <th class="text-center">Codigo</th>
+                        <th class="text-center">No. Credito</th>
+                        <th class="text-center">Producto Credito</th>
+                        <th class="text-center">Nombre de Cliente</th>
+                        <th class="text-center">Fecha Proximo Pago</th>
+                        <th class="text-center">Saldo Total</th>
+                        <th class="text-center"></th>
+                     </tr>
+                  </thead>
+                  <tbody>
+                     {% for cliente in clientes  %}
+                        <tr class="tr-cliente" data-id='{{cliente.cliente_id}}' data-nombre='{{cliente.nombre}}'>
+                           <td>{{cliente.cliente_interno}} </td>
+                           <td>{{cliente.credito}} </td>
+                           <td>{{cliente.producto_credito}} </td>
+                           <td>{{cliente.nombre}}</td>
+                           <td align="center">{{cliente.proxima_fecha_pago|date:'Y-m-d'}}</td>
+                           <td align="right">{{cliente.saldo_total_creditos}}</td>
+                           <td align="right"><a href="{% url 'gestion' cliente.cliente %}" data-id='{{cliente.cliente_id}}' type="button" class="btn btn-success btn-xs llamada">Gestionar</a></td>
+                        </tr>
+                     {% endfor %}
+                  </tbody>
+               </table>            
+            </div>
+         </div>
+         <!-- CLIENTES PENDIENTES -->
+         <div class="tab-pane table-responsive no-padding" id="tab_2">
+            <table class="table table-hover" id="tabla_cliente_pendiente">
+               <tr>
+                  <th class="text-center">Nombre de Cliente</th>
+                  <th colspan="2" class="text-center">Telefono</th>
+                  <th colspan="1">Fecha/Hora Devolución de Llamada</th>
+                  <th colspan="1">Nombre Contacto</th>
+                  <th colspan="1">Numero Contacto</th>
+               </tr>
+               {% for cliente in clientes_pendientes  %}
+               <tr class="tr-cliente" data-id='{{cliente.cliente_pendiente.pk}}'>
+                  <td>{{cliente.cliente.nombre}}</td>
+                  <td align="right"> {{cliente.telefono.telefono}} </td>
+                  <td><a href="{% url 'gestion_llamar' cliente.cliente.cliente cliente.telefono.telefono %}" type="button" data-id='{{cliente.cliente_id}}' class="btn btn-success btn-xs llamada">Gestionar</a></td>
+                  <td>{{cliente.devolver_llamada}}</td>
+                  {% if cliente.nombre_contacto != None %} <td>{{cliente.nombre_contacto}}</td> {% else %} <td></td> {% endif %}
+                  {% if cliente.telefono_contacto != None %} <td>{{cliente.telefono_contacto}}</td> {% else %} <td></td> {% endif %}
+               </tr>
+               {% endfor %}
+            </table>
+         </div>
+         
+         <!-- CLIENTES PROMESA -->
+         <div class="tab-pane no-padding" id="tab_3">
+            <table class="table table-hover" id="tabla_cliente_promesa">
+               <thead>
+                  <tr>
+                     <th class="text-center"></th>
+                     <th class="text-center">Codigo</th>
+                     <th class="text-center">No. Credito</th>
+                     <th class="text-center">Producto Credito</th>
+                     <th class="text-center">Nombre de Cliente</th>
+                     <th class="text-center">Fecha Proximo Pago</th>
+                     <th class="text-center">Saldo Total</th>
+                     <th class="text-center">Fecha Promesa</th>
+                     <th class="text-center"></th>
+                  </tr>
+               </thead>
+               <tbody>
+                  {% for cliente in clientes_promesa  %}
+                     <tr class="tr-cliente" data-id='{{cliente.cliente.cliente_id}}' data-nombre='{{cliente.cliente.nombre}}'>
+                        <td align="center">{% if cliente.fecha|date:'Y-m-d' == hoy|date:'Y-m-d' %} <span class="label label-warning">Dia de Promesa</span>  {% endif %}  </td>
+                           <td>{{cliente.cliente.cliente_interno}} </td>
+                           <td>{{cliente.cliente.credito}} </td>
+                           <td>{{cliente.cliente.producto_credito}} </td>
+                           <td>{{cliente.cliente.nombre}}</td>
+                           <td align="center">{{cliente.cliente.proxima_fecha_pago|date:'Y-m-d'}}</td>
+                           <td align="right">{{cliente.cliente.saldo_total_creditos}}</td>
+                        <td align="center">{{cliente.cliente.fecha|date:'Y-m-d'}} </td>
+                     
+                        <td><a href="{% url 'gestionesbo' cliente.cliente.cliente %}"  data-id='{{cliente.cliente.cliente_id}}' type="button" class="btn btn-success btn-xs llamada">Gestionar</a></td>
+                     </tr>
+                  {% endfor %}
+               </tbody>
+            </table>
+         </div>
+      </div>
+   </div>
+
+   {% include 'detalle_cliente.html' %}
+
+<script>
+   //este es para meter el formulario al momento que se carga la pagina, solo se hizo por estetica.
+   $(document).ready(function(){
+      localStorage.clear();
+      
+      formulario = '<form class="form-inline" method="POST">'
+      formulario +=     "{% csrf_token %}"
+      formulario +=     '<div class="form-group">'
+      formulario +=        '<label for="inputDesde">Desde</label>'
+      formulario +=        '<input required type="text" class="form-control fecha" id="inputDesde" name="desde" value="{{desde}}">'
+      formulario +=        '<input type="hidden" name="esFecha" id="esFecha" value="esFecha">'
+      formulario +=     '</div>'
+      formulario +=     '<div class="form-group">'
+      formulario +=        '<label for="inputHasta">Hasta</label>'
+      formulario +=        '<input required type="text" class="form-control fecha" id="inputHasta" name="hasta" value="{{hasta}}">'
+      formulario +=     '</div>'
+      
+      formulario +=     '<button type="submit" class="btn btn-default">Filtrar</button>'
+      formulario +=     '<a onclick="recargar()" class="btn btn-default" >Limpiar Filtro</a>'
+
+      formulario += '</form>'
+
+      
+
+      //LA SEGUNDA PARTE DEL FILTRO FUMADA
+
+      div = $( "#tabla_cliente_wrapper .row" ).children().first()
+      elsegundo = $( "#tabla_cliente_wrapper .row > :nth-child(2)" ).first()
+      elsegundo.removeAttr("class").addClass("col-sm-3")
+      div.removeAttr("class").addClass("col-sm-9")
+      div.append(formulario)
+
+
+      $('select').select2({
+         theme:'bootstrap',
+      });
+
+      $('.fecha').datepicker({
+         autoclose: true,
+         format: 'yyyy-mm-dd',
+         language: 'es',
+         todayHighlight: true,
+      })
+
+      $('.fecha').change(function(){
+         $( ".fecha" ).each(function( index ) {
+            $( this ).prop('required', true)
+         });
+      })
+
+
+   
+      var d = new Date();
+      var strDate = d.getFullYear() + "-" + (d.getMonth()+1) + "-" + (d.getDate()+1);
+      $("#inputDesde").val(localStorage.getItem("desde"));
+      $("#inputHasta").val(localStorage.getItem("hasta"));
+   
+
+      $("#inputDesde").on('change', function() {
+         localStorage.setItem("desde",$("#inputDesde").val());
+      });
+
+      $("#inputHasta").on('change', function() {
+         localStorage.setItem("hasta",$("#inputHasta").val());
+      });
+   });
+
+   
+   
+   //Guardar en el localstorage la fecha desde  hasta
+   
+   //Abre el modal de recordatorios
+   {% if recordatorios %}
+      $('#recordatorio').modal('show')
+   {% endif %}
+   //Al darle click a actualizar se muestra el loader
+   $('#actualizar').click(function(event) {
+      $('.loader').show()
+      setTimeout(function() {
+         $('.loader').hide()
+      }, 3000);
+   });
+
+   $('.llamada').click(function(){
+      var href = $(this).attr('href');
+      localStorage.setItem("id", $(this).data('id'));
+      $('.loader').show()
+      $.ajax({
+         url: "{% url 'morosidad_primera_cuota' %}",
+         data: {
+            id: $(this).data('id'),
+         }
+      })
+      .done(function( data ) {
+         window.location = href
+      });
+
+      // Delay setting the location for one second
+      //setTimeout(function() {window.location = href}, 500);
+      return false;
+   })
+
+   //Funcion para hacer un formato de miles con comas [1,200.00]
+   function numberWithCommas(x) {
+       return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+   }
+
+   jQuery.fn.dataTableExt.aTypes.unshift(
+    function ( sData )
+    {
+        var deformatted = sData.replace(/[^\d\-\.\/a-zA-Z]/g,'');
+        if ( $.isNumeric( deformatted ) || deformatted === "-" ) {
+            return 'formatted-num';
+        }
+        return null;
+    }
+   );
+
+   //PASAR  A ESPAÑOL EL DATATABLES
+   $("#tabla_cliente, #tabla_promesa_pago").DataTable({
+      "columnDefs": [
+         { type : 'formatted-num', "targets": [5], render: $.fn.dataTable.render.number(",", ".", 2, '')},
+         { className: "text-right", "targets": [5] },
+
+      ],
+      "order": [[ 2, "asc" ]],
+      "bLengthChange": false,
+      "language": {
+            "lengthMenu": "_MENU_ registros",
+            "zeroRecords": "No se encontro ningun registro",
+            "info": "Pagina _PAGE_ de _PAGES_",
+            "infoEmpty": "No hay registros",
+            "infoFiltered": "(filtrado de _MAX_ registros)",
+            "search":         "Buscar:",
+            "paginate": {
+                 "first":      "Primero",
+                 "last":       "Ultimo",
+                 "next":       "Siguiente",
+                 "previous":   "Anterior"
+             },
+        }
+   });
+
+   $("#tabla_cliente_promesa").DataTable({
+      "columnDefs": [
+         { type : 'formatted-num', "targets": [5], render: $.fn.dataTable.render.number(",", ".", 2, '')},
+         { className: "text-right", "targets": [5] },
+
+      ],
+      "language": {
+            "lengthMenu": "_MENU_ registros",
+            "zeroRecords": "No se encontro ningun registro",
+            "info": "Pagina _PAGE_ de _PAGES_",
+            "infoEmpty": "No hay registros",
+            "infoFiltered": "(filtrado de _MAX_ registros)",
+            "search":         "Buscar:",
+            "paginate": {
+                 "first":      "Primero",
+                 "last":       "Ultimo",
+                 "next":       "Siguiente",
+                 "previous":   "Anterior"
+             },
+        },
+      "order": [[ 9, "asc" ]]
+   });
+
+   
+
+
+   //funcion de búsqueda (mal hecha)
+   
+
+</script>
+
+{% endblock %}

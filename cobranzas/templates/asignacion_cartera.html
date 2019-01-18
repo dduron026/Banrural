@@ -1,0 +1,191 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% load bootstrap %}
+
+{% block titulo-llamada %}
+   {% include 'conteo_llamadas.html' %}
+{% endblock %}
+
+{% block contenido %}
+<link rel="stylesheet" href="{% static 'css/custom.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/select2/select2.min.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/select2/select2-bootstrap.min.css' %}">
+<script src="{% static 'plugins/select2/select2.min.js' %}"></script>
+
+<link rel="stylesheet" href="{% static 'plugins/bootstrap-datepicker/css/bootstrap-datepicker.css' %}">
+<script src="{% static 'plugins/bootstrap-datepicker/js/bootstrap-datepicker.js' %}"></script>
+<script src="{% static 'plugins/bootstrap-datepicker/locales/bootstrap-datepicker.es.min.js' %}"></script>
+
+<link rel="stylesheet" href="{% static 'plugins/datatables/dataTables.bootstrap.css' %}">
+<script src="{% static 'plugins/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'plugins/datatables/dataTables.bootstrap.min.js' %}"></script>
+
+
+<div class="box box-success">
+  <div class="box-header with-border">
+     <h3 class="box-title">Asignacion de Cartera</h3>
+  </div>
+  <div class="box-body">
+  <form method="POST">
+    {% csrf_token %}
+    <input type="hidden" name="metodo" value="" id="metodo">
+    <div class="col-sm-12">
+      <div class="bs-callout bs-callout-warning" role="alert">
+          Por favor tomar en cuenta lo siguiente:
+          <b>
+          <ul>
+            <li> Los clientes mostrados son los clientes que no tienen asigando un agente. </li>
+          </ul>
+          </b>
+      </div>
+      <br>
+      Elija los criterios necesarios para la asignacion de: <b> {{gestor.username}} - {{gestor.first_name}} {{gestor.last_name}} </b>
+      <div class="row form-group">
+        <div class=" col-md-6">
+          {{formulario.producto|bootstrap_horizontal:'col-xs-2' }}
+        </div>
+        <div class=" col-md-6">
+          {{formulario.agencia|bootstrap_horizontal:'col-xs-2' }}
+        </div>
+      </div> 
+      <div class="row form-group">
+        <div class=" col-md-3">
+          {{formulario.desde_mora|bootstrap_horizontal:'col-xs-4' }}
+        </div>
+        <div class=" col-md-3">
+          {{formulario.hasta_mora|bootstrap_horizontal:'col-xs-4' }}
+        </div>
+        <div class=" col-md-3">
+          {{formulario.desde_capital|bootstrap_horizontal:'col-xs-4' }}
+        </div>
+        <div class=" col-md-3">
+          {{formulario.hasta_capital|bootstrap_horizontal:'col-xs-4' }}
+        </div>
+      </div> 
+
+
+        
+
+      <div class="form-group">
+        <div class=" col-md-12 form-inline">
+          <button type="submit" class="btn btn-primary" id="buscar">Buscar Clientes</button><br>
+        </div>
+      </div> 
+
+      <br>
+      <br>
+
+
+
+
+         {% if mensaje == 'exito' %}
+            <span class="label label-success">Se aplicaron los cambios correspondientes.</span>
+            <br><br>
+         {% endif %}
+
+        <table class="table table-hover" id="tabla">
+          <thead>
+             <tr>
+                <th><input type="checkbox" id="todo" name="todo"></th>
+                <th class="text-center">Codigo</th>
+                <th class="text-center">No. Credito</th>
+                <th class="text-center">Producto</th>
+                <th class="text-center">Agencia</th>
+                <th class="text-center">Nombre de Cliente</th>
+                <th class="text-center">Dias Atraso</th>
+                <th class="text-center">Cuotas Mora</th>
+                <th class="text-center">Saldo Total</th>
+             </tr>
+          </thead>
+          <tbody>
+             {% for cliente in clientes %}
+                <tr class="tr-cliente" data-id='{{cliente.cliente_id}}' data-nombre='{{cliente.nombre}}'>
+                   <td> <input type="checkbox" class="checkbox" name="cliente" value="{{cliente.pk}}"> </td>
+                   <td>{{cliente.cliente_interno}} </td>
+                   <td>{{cliente.credito}} </td>
+                   <td>{{cliente.producto_credito}} </td>
+                   <td>{{cliente.agencia}} </td>
+                   <td>{{cliente.nombre}}</td>
+                   <td>{{cliente.dias_atraso}}</td>
+                   <td align="right">{{cliente.cuotas_mora}}</td>
+                   <td align="right">{{cliente.saldo_total_creditos}}</td>
+
+                   <!-- <td><a id="gestionarBTN" href="{% url 'gestion' cliente.cliente %}" data-id='{{cliente.cliente_id}}' type="button" class="btn btn-success btn-xs llamada">Gestionar</a></td> -->
+                </tr>
+             {% endfor %}
+          </tbody>
+          
+        </table>
+        <button class="btn btn-success" type="submit" id="asignar">Asignar Clientes</button>
+
+      
+  </form>
+    </div>
+     
+  </div>
+</div>
+
+<script type="text/javascript">
+  $('#fecha').datepicker({
+    autoclose: true,
+    format: 'yyyy-mm-dd',
+    language: 'es',
+    todayHighlight: true,
+    orientation: "bottom right"
+  })
+
+  $('select, #id_producto').select2({
+      theme : 'bootstrap',
+      width : '100%'
+   });
+
+     var table = $("#tabla").DataTable({
+      "pageLength": 15,
+      "order": [[ 1, "desc" ]],
+      "bLengthChange":false,
+      "language": {
+            "lengthMenu": "_MENU_ registros",
+            "zeroRecords": "No se encontro ningun registro",
+            "info": "Pagina _PAGE_ de _PAGES_",
+            "infoEmpty": "No hay registros",
+            "infoFiltered": "(filtrado de _MAX_ registros)",
+            "search":         "Buscar:",
+            "paginate": {
+                 "first":      "Primero",
+                 "last":       "Ultimo",
+                 "next":       "Siguiente",
+                 "previous":   "Anterior"
+             }
+        }
+      });
+
+
+     //El boton checkbox
+   $('#tabla tbody tr, .checkbox').click(function(){
+      item = $(this).closest("tr").find(".checkbox").prop('checked')
+      if (item == true){
+          $(this).closest("tr").find(".checkbox").prop('checked', false)
+      }else{
+          $(this).closest("tr").find(".checkbox").prop('checked', true)
+      }
+   })
+
+   $('#todo').change(function(){
+      if ($(this).prop('checked') == true){
+         $("input[type=checkbox]").prop('checked', true)
+      }else{
+         $("input[type=checkbox]").prop('checked', false)
+      }
+   })
+
+    $('#asignar').click(function(){
+      $('#metodo').val('asignar')
+      return true
+    });
+
+    $('#buscar').click(function(){
+      $('#metodo').val('buscar')
+      return true
+    });
+</script>
+{% endblock %}

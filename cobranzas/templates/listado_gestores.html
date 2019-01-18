@@ -1,0 +1,177 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% load bootstrap %}
+
+{% block titulo %}
+{% endblock %}
+
+{% block contenido %}
+<link rel="stylesheet" href="{% static 'plugins/datatables/dataTables.bootstrap.css' %}">
+<script src="{% static 'plugins/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'plugins/datatables/dataTables.bootstrap.min.js' %}"></script>
+
+
+<div class="loader"></div>
+   <!-- LISTADO DE CLIENTES -->
+   <div class="nav-tabs-custom">
+      <ul class="nav nav-tabs">
+         <li class="active"><a href="#tab_1" data-toggle="tab">Clientes en Mora</a></li>
+
+      </ul>
+
+      <div class="tab-content">
+         <div class="tab-pane active no-padding" id="tab_1">
+            <div>
+               <table class="table table-hover" id="tabla_cliente">
+                  <thead>
+                     <tr>
+                        <th class="text-center">Usuario</th>
+                        <th class="text-center">Gestor / Operador</th>
+                        <th class="text-center">Producto</th>
+                        <th class="text-center">Monto</th>
+                        <th class="text-center">Dias de Mora</th>
+                        <th class="text-center">Agencia</th>
+                        <th class="text-center">Desasignar</th>
+                        <th class="text-center">Nueva Asignacion</th>
+                     </tr>
+                  </thead>
+                  <tbody>
+                     {% for gestor in gestores  %}
+                        <tr class="tr-gestor" data-id='{{gestor.pk}}' data-nombre='{{gestor.username}}'>
+                           <td>{{gestor.username}}  </td>
+                           <td>{{gestor.first_name}} {{gestor.last_name}} </td>
+                           {% if gestor.historial  %}
+                              <td>
+                                 {% for x in gestor.historial %}
+                                    {{x.productos}} <br>
+                                 {% endfor %}
+                              </td>
+                              <td>
+                                 {% for x in gestor.historial %}
+                                    {{x.capital_mora}} <br>
+                                 {% endfor %}
+                                 
+                              </td>
+                              <td>
+                                 {% for x in gestor.historial %}
+                                    {{x.dias_mora}} <br>
+                                 {% endfor %}
+                                 
+                              </td>
+                              <td>
+                                 {% for x in gestor.historial %}
+                                    {{x.agencias}} <br>
+                                 {% endfor %}
+                              </td>
+                              <td>
+                                 {% for x in gestor.historial %}
+                                    <a href="{% url 'desasignacion_cartera' x.cod_historial %}" class="desasignar">Desasignar</a> <br>
+                                 {% endfor %}
+                              </td>
+                           {% else %}
+                              <td></td>
+                              <td></td>
+                              <td></td>
+                              <td></td>
+                              <td></td>
+                           {% endif %}
+                           
+                           <td> <a href="{% url 'asignacion_cartera' gestor.pk %}">Nueva Asignación</a>  </td>
+                           
+                        </tr>
+                     {% endfor %}
+                  </tbody>
+               </table>
+            </div>
+         </div>
+      </div>
+   </div>
+
+<script>
+
+   //Abre el modal de recordatorios
+   {% if recordatorios %}
+      $('#recordatorio').modal('show')
+   {% endif %}
+   //Al darle click a actualizar se muestra el loader
+   $('#actualizar').click(function(event) {
+      $('.loader').show()
+      setTimeout(function() {
+         $('.loader').hide()
+      }, 3000);
+   });
+
+   $('.desasignar').click(function(){
+      var r = confirm("¿Esta seguro de realizar la desasignacion?");
+      if (r == true) {
+          return true
+      } else {
+         return false
+      }
+   })
+
+   $('.llamada').click(function(){
+      var href = $(this).attr('href');
+      localStorage.setItem("id", $(this).data('id'));
+      $('.loader').show()
+      $.ajax({
+         url: "{% url 'morosidad_primera_cuota' %}",
+         data: {
+            id: $(this).data('id'),
+         }
+      })
+      .done(function( data ) {
+         window.location = href
+      });
+
+      // Delay setting the location for one second
+      //setTimeout(function() {window.location = href}, 500);
+      return false;
+   })
+
+   //Funcion para hacer un formato de miles con comas [1,200.00]
+   function numberWithCommas(x) {
+       return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+   }
+
+   jQuery.fn.dataTableExt.aTypes.unshift(
+    function ( sData )
+    {
+        var deformatted = sData.replace(/[^\d\-\.\/a-zA-Z]/g,'');
+        if ( $.isNumeric( deformatted ) || deformatted === "-" ) {
+            return 'formatted-num';
+        }
+        return null;
+    }
+   );
+
+   //PASAR  A ESPAÑOL EL DATATABLES
+   var table = $("#tabla_cliente").DataTable({
+      /*"columnDefs": [
+         { type : 'formatted-num', "targets": [6,7,8,9], render: $.fn.dataTable.render.number(",", ".", 2, '')},
+         { className: "text-right", "targets": [4,5,6,7,8,9] },
+
+      ],*/
+      "pageLength": 15,
+      "order": [[ 0, "desc" ]],
+      "bLengthChange":false,
+      "language": {
+            "lengthMenu": "_MENU_ registros",
+            "zeroRecords": "No se encontro ningun registro",
+            "info": "Pagina _PAGE_ de _PAGES_",
+            "infoEmpty": "No hay registros",
+            "infoFiltered": "(filtrado de _MAX_ registros)",
+            "search":         "Buscar:",
+            "paginate": {
+                 "first":      "Primero",
+                 "last":       "Ultimo",
+                 "next":       "Siguiente",
+                 "previous":   "Anterior"
+             },
+        }
+   });
+
+
+</script>
+
+{% endblock %}

@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% load bootstrap %}
+
+{% block titulo-llamada %}
+   {% include 'conteo_llamadas.html' %}
+{% endblock %}
+
+{% block contenido %}
+<div class="box box-success">
+  <div class="box-header with-border">
+     <h3 class="box-title">Busqueda de Agente</h3>
+  </div>
+  <div class="box-body">
+  <form method="POST">
+    {% csrf_token %}
+    <div class="col-sm-12">
+         <div class="form-group">
+            <!-- <label class="control-label col-md-1 text-right" for="identidad">Buscar Cliente</label> -->
+            <div class=" col-md-12 form-inline">
+               <input type="text" name="identidad" class="form-control" id='identidad' placeholder="Identidad / Codigo" required> 
+               <button type="submit" class="btn btn-primary" id="search_identidad"><span class="glyphicon glyphicon-search" aria-hidden="true"></span></button><br>
+               {% if mensaje == 'error' %}
+                  <span class="label label-danger "  id='error_identidad'>No se encontraron registros con la identidad ingresada</span>
+               {% endif %}
+            </div>
+         </div> 
+         <br>
+         <br>
+         <h4><B>INFORMACION DEL AGENTE</B></h4>
+         <br>
+         <table class="table table-bordered">
+            <tr>
+               <td width="150px">Agente</td>
+               <td>{{cliente.agente.username}} - {{cliente.agente.first_name}} {{cliente.agente.last_name}}</td>
+            </tr>
+         </table>
+      </div>
+  </form>
+     
+  </div>
+</div>
+
+<script type="text/javascript">
+  localStorage.setItem("id", {{cliente.cliente_id}});
+</script>
+{% endblock %}

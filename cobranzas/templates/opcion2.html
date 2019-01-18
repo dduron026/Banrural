@@ -1,0 +1,255 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% load bootstrap %}
+
+{% block titulo-llamada %}
+   {% include 'conteo_llamadas.html' %}
+{% endblock %}
+
+{% block titulo %}
+{% endblock %}
+
+{% block contenido %}
+<link rel="stylesheet" href="{% static 'css/custom.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/datatables/dataTables.bootstrap.css' %}">
+<script src="{% static 'plugins/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'plugins/datatables/dataTables.bootstrap.min.js' %}"></script>
+
+
+<div class="loader"></div>
+   <!-- LISTADO DE CLIENTES -->
+   <div class="nav-tabs-custom">
+      <ul class="nav nav-tabs">
+         <li class="active"><a href="#tab_1" data-toggle="tab">Clientes en Mora</a></li>
+         <li><a href="#tab_2" data-toggle="tab">Clientes Pendientes</a></li>
+         <li><a href="#tab_3" data-toggle="tab">Promesa Pago {% if promesa > 0 %} <span class="label label-warning">{{promesa}}</span> {% endif %} </a></li>
+         <h5 style="margin-right: 20px; margin-top: 15px" class="pull-right">Total Clientes: <strong>{{numeroClientes}}</strong></h5>
+      </ul>
+      <div class="tab-content">
+         <div class="tab-pane active no-padding" id="tab_1">
+         <!-- CLIENTES NORMALES -->         
+            <div>
+               <table class="table table-hover" id="tabla_cliente">
+                  <thead>
+                     <tr>
+                        <th class="text-center">Codigo</th>
+                        <th class="text-center">No. Credito</th>
+                        <th class="text-center">Producto</th>
+                        <th class="text-center">Nombre de Cliente</th>
+                        <th class="text-center">Dias Atraso</th>
+                        <th class="text-center">Cuotas Mora</th>
+                        <th class="text-center">Capital Mora</th>
+                        <th class="text-center">Int. Mora</th>
+                        <th class="text-center">Int. Moratorio</th>
+                        <th class="text-center">Saldo Total</th>
+                        <th class="text-center"></th>
+                     </tr>
+                  </thead>
+                  <tbody>
+                     {% for cliente in clientes  %}
+                        <tr class="tr-cliente" data-id='{{cliente.cliente_id}}' data-nombre='{{cliente.nombre}}'>
+                           <td>{{cliente.cliente_interno}} </td>
+                           <td>{{cliente.credito}} </td>
+                           <td>{{cliente.producto_credito}} </td>
+                           <td>{{cliente.nombre}}</td>
+                           <td>{{cliente.dias_atraso}}</td>
+                           <td align="right">{{cliente.cuotas_mora}}</td>
+                           <td align="right">{{cliente.capital_mora}}</td>
+                           <td align="right">{{cliente.intereses_mora}}</td>
+                           <td align="right">{{cliente.intereses_moratorios}}</td>
+                           <td align="right">{{cliente.saldo_total_creditos}}</td>
+                           <td><a href="{% url 'gestion' cliente.cliente %}" data-id='{{cliente.cliente_id}}' type="button" class="btn btn-success btn-xs llamada">Gestionar</a></td>
+                        </tr>
+                     {% endfor %}
+                  </tbody>
+               </table>
+            </div>
+         </div>
+         <!-- CLIENTES PENDIENTES -->
+         <div class="tab-pane table-responsive no-padding" id="tab_2">
+            <table class="table table-hover" id="tabla_cliente_pendiente">
+               <tr>
+                  <th class="text-center">Nombre de Cliente</th>
+                  <th colspan="2" class="text-center">Telefono</th>
+                  <th colspan="1">Fecha/Hora Devolución de Llamada</th>
+                  <th colspan="1">Nombre Contacto</th>
+                  <th colspan="1">Numero Contacto</th>
+               </tr>
+               {% for cliente in clientes_pendientes  %}
+               <tr class="tr-cliente" data-id='{{cliente.cliente_pendiente.pk}}'>
+                  <td>{{cliente.cliente.nombre}}</td>
+                  <td align="right"> {{cliente.telefono.telefono}} </td>
+                  <td><a href="{% url 'gestion_llamar' cliente.cliente.cliente cliente.telefono.telefono %}" type="button" data-id='{{cliente.cliente_id}}' class="btn btn-success btn-xs llamada">Gestionar</a></td>
+                  <td>{{cliente.devolver_llamada}}</td>
+                  {% if cliente.nombre_contacto != None %} <td>{{cliente.nombre_contacto}}</td> {% else %} <td></td> {% endif %}
+                  {% if cliente.telefono_contacto != None %} <td>{{cliente.telefono_contacto}}</td> {% else %} <td></td> {% endif %}
+               </tr>
+               {% endfor %}
+            </table>
+         </div>
+         
+         <!-- CLIENTES PROMESA -->
+         <div class="tab-pane no-padding" id="tab_3">
+            <table class="table table-hover" id="tabla_cliente_promesa">
+               <thead>
+                  <tr>
+                     <th class="text-center"></th>
+                     <th class="text-center">Codigo</th>
+                     <th class="text-center">No. Credito</th>
+                     <th class="text-center">Producto</th>
+                     <th class="text-center">Nombre de Cliente</th>
+                     <th class="text-center">Dias Atraso</th>
+                     <th class="text-center">Cuotas Mora</th>
+                     <th class="text-center">Capital Mora</th>
+                     <th class="text-center">Int. Mora</th>
+                     <th class="text-center">Int. Moratorio</th>
+                     <th class="text-center">Saldo Total</th>
+                     <th class="text-center">Fecha Promesa</th>
+                     <th class="text-center"></th>
+                  </tr>
+               </thead>
+               <tbody>
+                  {% for cliente in clientes_promesa  %}
+                     <tr class="tr-cliente" data-id='{{cliente.cliente.cliente_id}}' data-nombre='{{cliente.cliente.nombre}}'>
+                        <td align="center">{% if cliente.fecha|date:'Y-m-d' == hoy|date:'Y-m-d' %} <span class="label label-warning">Dia de Promesa</span>  {% endif %}  </td>
+                        <td>{{cliente.cliente.cliente_interno}} </td>
+                           <td>{{cliente.cliente.credito}} </td>
+                           <td>{{cliente.cliente.producto_credito}} </td>
+                           <td>{{cliente.cliente.nombre}}</td>
+                           <td>{{cliente.cliente.dias_atraso}}</td>
+                           <td align="right">{{cliente.cliente.cuotas_mora}}</td>
+                           <td align="right">{{cliente.cliente.capital_mora}}</td>
+                           <td align="right">{{cliente.cliente.intereses_mora}}</td>
+                           <td align="right">{{cliente.cliente.intereses_moratorios}}</td>
+                           <td align="right">{{cliente.cliente.saldo_total_creditos}}</td>
+                        <td align="center">{{cliente.fecha|date:'Y-m-d'}} </td>
+                     
+                        <td><a href="{% url 'gestionesbo' cliente.cliente.cliente %}"  data-id='{{cliente.cliente.cliente_id}}' type="button" class="btn btn-success btn-xs llamada">Gestionar</a></td>
+                     </tr>
+                  {% endfor %}
+               </tbody>
+            </table>
+         </div>
+      </div>
+   </div>
+
+   {% include 'detalle_cliente.html' %}
+
+<script>
+   //Abre el modal de recordatorios
+   {% if recordatorios %}
+      $('#recordatorio').modal('show')
+   {% endif %}
+   //Al darle click a actualizar se muestra el loader
+   $('#actualizar').click(function(event) {
+      $('.loader').show()
+      setTimeout(function() {
+         $('.loader').hide()
+      }, 3000);
+   });
+
+   $('.llamada').click(function(){
+      var href = $(this).attr('href');
+      localStorage.setItem("id", $(this).data('id'));
+      $('.loader').show()
+      $.ajax({
+         url: "{% url 'morosidad_primera_cuota' %}",
+         data: {
+            id: $(this).data('id'),
+         }
+      })
+      .done(function( data ) {
+         window.location = href
+      });
+
+      // Delay setting the location for one second
+      //setTimeout(function() {window.location = href}, 500);
+      return false;
+   })
+
+   //Funcion para hacer un formato de miles con comas [1,200.00]
+   function numberWithCommas(x) {
+       return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+   }
+
+   jQuery.fn.dataTableExt.aTypes.unshift(
+    function ( sData )
+    {
+        var deformatted = sData.replace(/[^\d\-\.\/a-zA-Z]/g,'');
+        if ( $.isNumeric( deformatted ) || deformatted === "-" ) {
+            return 'formatted-num';
+        }
+        return null;
+    }
+   );
+
+   //PASAR  A ESPAÑOL EL DATATABLES
+   $("#tabla_cliente, #tabla_promesa_pago").DataTable({
+      "columnDefs": [
+         { type : 'formatted-num', "targets": [6,7,8,9], render: $.fn.dataTable.render.number(",", ".", 2, '')},
+         { className: "text-right", "targets": [4,5,6,7,8,9] },
+
+      ],
+      "order": [[ 7, "desc" ]],
+      "language": {
+            "lengthMenu": "_MENU_ registros",
+            "zeroRecords": "No se encontro ningun registro",
+            "info": "Pagina _PAGE_ de _PAGES_",
+            "infoEmpty": "No hay registros",
+            "infoFiltered": "(filtrado de _MAX_ registros)",
+            "search":         "Buscar:",
+            "paginate": {
+                 "first":      "Primero",
+                 "last":       "Ultimo",
+                 "next":       "Siguiente",
+                 "previous":   "Anterior"
+             },
+        }
+   });
+
+    $("#tabla_cliente_promesa").DataTable({
+      "columnDefs": [
+         { type : 'formatted-num', "targets": [7,8,9,10], render: $.fn.dataTable.render.number(",", ".", 2, '')},
+         { className: "text-right", "targets": [5,6,7,8,9,10] },
+
+      ],
+      "language": {
+            "lengthMenu": "_MENU_ registros",
+            "zeroRecords": "No se encontro ningun registro",
+            "info": "Pagina _PAGE_ de _PAGES_",
+            "infoEmpty": "No hay registros",
+            "infoFiltered": "(filtrado de _MAX_ registros)",
+            "search":         "Buscar:",
+            "paginate": {
+                 "first":      "Primero",
+                 "last":       "Ultimo",
+                 "next":       "Siguiente",
+                 "previous":   "Anterior"
+             },
+        },
+      "order": [[ 9, "asc" ]]
+   });
+
+   $(document).ready(function(){
+      localStorage.clear();
+      formulario = '<form class="form-inline" method="POST">'
+      formulario +=     "{% csrf_token %}"
+      formulario +=     '<div class="form-group">'
+      formulario +=        '<label for="exampleInputName2">Filtrar por Dias de atraso: </label>'
+      formulario +=        '<input required type="number" class="form-control fecha" id="exampleInputName2" name="diasAtraso" placeholder="1,2,3...">'
+      formulario +=     '</div>'
+      formulario +=     '<button type="submit" class="btn btn-default">Filtrar</button>'
+      formulario +=     '<a onclick="recargar();" class="btn btn-default" >Limpiar Filtro</a>'
+      formulario += '</form>'
+      div = $( "#tabla_cliente_wrapper .row" ).children().first()
+      div.append(formulario)
+
+   });
+
+
+   //funcion de búsqueda (mal hecha)
+   
+
+</script>
+
+{% endblock %}

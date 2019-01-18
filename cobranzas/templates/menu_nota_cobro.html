@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% load bootstrap %}
+
+
+{% block titulo %}
+{% endblock %}
+
+{% block contenido %}
+<link rel="stylesheet" href="{% static 'css/custom.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/datatables/dataTables.bootstrap.css' %}">
+<script src="{% static 'plugins/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'plugins/datatables/dataTables.bootstrap.min.js' %}"></script>
+
+<style type="text/css" media="screen">
+   
+   .largo{
+      width: 170px;
+   }
+</style>
+
+<div class="loader"></div>
+<!-- DETALLE CLIENTES -->
+<!-- LISTADO DE  CLIENTES -->
+<div class="box box-success">
+   <div class="box-header with-border">
+      <h3 class="box-title">Generar Notas de Cobro</h3>
+      <a href="{{request.session.pagina_principal}}" class="pull-right"> << Atras </a>
+
+   </div>
+   <div class="box-body">
+
+      <br>
+      <br>
+      <div align="center">
+         <a href="{% url 'nota_cobro_masivo' 15 %}" class="btn btn-success btn-lg largo"> Mora 15 dias </a>
+         <a href="{% url 'nota_cobro_masivo' 30 %}" class="btn btn-success btn-lg largo"> Mora 30 dias </a>
+      </div>
+      <br>
+      <div align="center">
+         <a href="{% url 'nota_cobro_masivo' 60 %}" class="btn btn-success btn-lg largo"> Mora 60 dias </a>
+         <a href="{% url 'nota_cobro_masivo' 90 %}" class="btn btn-success btn-lg largo"> Mora 90 dias </a>
+      </div>
+      <br>
+      <br>
+   </div>
+</div>
+
+<!-- ........................................................................................ -->
+
+
+<script>
+   //Al darle click a actualizar se muestra el loader
+   $('#actualizar').click(function(event) {
+      $('.loader').show()
+      setTimeout(function() {
+         $('.loader').hide()
+      }, 3000);
+   });
+
+   
+
+   //Funcion para hacer un formato de miles con comas [1,200.00]
+   function numberWithCommas(x) {
+       return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+   }
+
+   
+   $('.plan-pago').click(function(event) {
+      $('.loader').show()
+      $("#tabla-plan-pago").find("tr:gt(0)").remove();
+      credito = $(this).attr('data-credito')
+      $.ajax({
+         url: '/cobranzas/gestion/ajax',
+         data: { opcion : 'plan_pago', credito : $(this).attr('data-credito') },
+      })
+      .done(function(response) {
+         $.each(response, function( index , registro ) {
+            fila  = '<tr>'
+            fila += '<td> ' + registro.fecha + ' </td>'
+            fila += '<td align="right"> ' + numberWithCommas(registro.cuota)  + ' </td>'
+            fila += '<td align="right"> ' + numberWithCommas(registro.capital)  + ' </td>'
+            fila += '<td align="right"> ' + numberWithCommas(registro.intereses)  + ' </td>'
+            switch(registro.pagado) {
+               case '1':
+                  fila += '<td> <span class="label label-success">Si</span> </td>'
+                  break;
+               case '2':
+                  fila += '<td> <span class="label label-danger">Mora</span> </td>'
+                  break;
+               case '3':
+                  fila += '<td> <span class="label label-warning">Pendiente</span> </td>'
+                  break;
+            }
+            fila += '</tr>'
+            $('#tabla-plan-pago').append(fila)
+         });
+
+         $('.loader').hide()
+         $('#modal-pago-credito').text(credito)
+         $('#plan_pago').modal('show')
+      })
+   });
+   
+
+   //PASAR  A ESPAÑOL EL DATATABLES
+   $("#tabla_cliente").DataTable({
+      "language": {
+            "lengthMenu": "_MENU_ registros",
+            "zeroRecords": "No se encontro ningun registro",
+            "info": "Pagina _PAGE_ de _PAGES_",
+            "infoEmpty": "No hay registros",
+            "infoFiltered": "(filtrado de _MAX_ registros)",
+            "search":         "Buscar:",
+            "paginate": {
+                 "first":      "Primero",
+                 "last":       "Ultimo",
+                 "next":       "Siguiente",
+                 "previous":   "Anterior"
+             },
+        }
+   });
+
+
+</script>
+
+{% endblock %}

@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% load bootstrap %}
+
+{% block titulo %}
+{% endblock %}
+
+{% block contenido %}
+<link rel="stylesheet" href="{% static 'css/custom.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/select2/select2.min.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/select2/select2-bootstrap.min.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/bootstrap-datepicker/css/bootstrap-datepicker.css' %}">
+
+<script src="{% static 'plugins/bootstrap-datepicker/js/bootstrap-datepicker.js' %}"></script>
+<script src="{% static 'plugins/bootstrap-datepicker/locales/bootstrap-datepicker.es.min.js' %}"></script>
+<script src="{% static 'plugins/select2/select2.min.js' %}"></script>
+
+<style type="text/css">
+   label{
+      font-weight: normal !important;
+   }
+</style>
+
+<div class="loader"></div>
+
+<!-- RESPUESTA DEL CLIENTE -->
+<div class="box box-success">
+   <div class="box-header with-border">
+      <h3 class="box-title">Listado de Reclamos </h3>
+      <a href="{% url 'menu' %}" class="pull-right"> << Atras</a>
+   </div>
+   <div class="box-body">
+      <form method="post" class="form-inline" accept-charset="utf-8" id="formulario-direccion">
+         {% csrf_token %}
+         <div class="row">
+            <div class="col-sm-12">
+               <table class="table table-hover" id='tabla'>
+                  <thead>
+                     <tr>
+                        <th>N. Reclamo</th>
+                        <th>Codigo Cliente</th>
+                        <th>Identidad</th>
+                        <th>Fecha</th>
+                        <th>Categoria</th>
+                        <th>Observaciones</th>
+                        <th>Estado</th>
+                     </tr>
+                  </thead>
+                  <tbody>
+                     {% if reclamos %}
+                        {% for reclamo in reclamos %}
+                           <tr>
+                              <td>{{reclamo.reclamo}}</td>
+                              <td>{{reclamo.cliente}}</td>
+                              <td>{{reclamo.identidad}}</td>
+                              <td>{{reclamo.fecha_hora}}</td>
+                              <td>{{reclamo.categoria}}</td>
+                              <td>{{reclamo.observaciones}}</td>
+                              <td>Activo</td>
+                           </tr>
+                        {% endfor %}
+                     {% endif %}
+                  </tbody>
+               </table>
+            </div>
+         </div>
+      </form>
+      <br>
+      <br>
+   </div>
+</div>
+<!--........................................................................................ -->
+
+<script>
+   
+</script>
+
+{% endblock %}

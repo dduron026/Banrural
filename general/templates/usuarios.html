@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% load bootstrap %}
+
+
+{% block contenido %}
+<link rel="stylesheet" href="{% static 'css/custom.css' %}">
+<div class="loader"></div>
+<!-- ........................................................................................ -->
+<!-- DETALLE CLIENTES -->
+<div class="box box-success">
+   <div class="box-header with-border">
+      <h3 class="box-title">Administracion de Usuarios </h3>
+   </div>
+   <div class="box-body">
+     <form action="" method="POST" accept-charset="utf-8" class="form-horizontal">  
+      {% csrf_token %}
+        <div class="form-group">
+          <label for="identidad" class="col-sm-2 control-label">Usuario</label>
+          <div class="col-sm-10 form-inline">
+            <input type="text" name="usuario" class="form-control" id='identidad' placeholder="Ingresar Usuario" required> 
+            <button type="button" class="btn btn-primary" id="search_identidad"><span class="glyphicon glyphicon-search" aria-hidden="true"></span></button><br>
+
+            <span class="label label-danger"  id='error' style="display:none" >Error en realizar la consulta / transaccion</span>
+            <span class="label label-success"  id='exito' style="display:none" >Se almaceno correctamente el usuario</span>
+
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="inputEmail3" class="col-sm-2 control-label">Nombre del Cliente</label>
+          <div class="col-sm-5">
+            <input type="text" class="form-control" id="nombre_cliente" readonly>
+          </div>
+        </div>
+        
+
+        <div class="form-group">
+          <label for="inputEmail3" class="col-sm-2 control-label">Rol del Usuario</label>
+          <div class="col-sm-5">
+              <select class="form-control" name='grupo'>
+                  {% for grupo in grupos %}
+                    <option value="{{grupo.id}}" > {{grupo}} </option>
+                  {% endfor %}
+              </select>
+          </div>
+        </div>
+
+        <button class="btn btn-success col-sm-offset-2"> Guardar Usuario </button>
+
+      </form>
+    </div> 
+   </div>
+</div>
+<!-- ........................................................................................ -->
+
+
+<script>
+
+    $('#search_identidad').click(function(){
+        $.ajax({
+         url: "{% url 'ajax_general' %}",
+         data: {
+            opcion: 'busqueda_usuario',
+            usuario: $('#identidad').val()
+         }
+      })
+      .done(function( data ) {
+        if (data != ''){
+          $.each(data, function( index , registro ) {
+            $('#nombre_cliente').val(registro.NameLocal)
+            $('#error').hide()
+          })
+        }else{
+          $('#nombre_cliente').val('')
+          $('#error').show()
+        }
+      });
+    });
+
+    {% if mensaje == 'exito' %}
+      $('#exito').fadeIn('slow').delay(5000).fadeOut('slow');
+    {% endif %}
+
+    {% if mensaje == 'error' %}
+      $('#error').fadeIn('slow').delay(5000).fadeOut('slow');
+    {% endif %}
+</script>
+
+
+{% endblock %}

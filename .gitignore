@@ -1,0 +1,5 @@
+*.pyc
+
+cliente/migrations/
+general/migrations/
+cobranzas/migrations/

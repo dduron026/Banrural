@@ -1,0 +1,1056 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% load bootstrap %}
+
+{% block titulo %}
+  <section class="content-header">
+  {% if gestiones %}
+    {% for gestion in gestiones %}
+      <h4> Total : {{gestion.total}} |
+          Clientes Localizados : {{gestion.total_localizado}} |
+          Clientes NO Localizados : {{gestion.total_no_localizado}} |
+          Clientes Pendientes : {{gestion.total_pendiente}}
+      </h4>
+    {% endfor %}
+  {% else %}
+    <h4> Total Llamadas : 0 |
+        Clientes Localizados : 0 |
+        Clientes NO Localizados : 0 |
+        Clientes Pendientes : 0
+    </h4>
+  {% endif %}
+
+  </section>
+{% endblock %}
+
+{% block contenido %}
+<script src="{% static 'plugins/select2/select2.min.js' %}"></script>
+<script src="{% static 'js/bootstrap3-typeahead.js' %}"></script>
+<link rel="stylesheet" href="{% static 'plugins/select2/select2.min.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/select2/select2-bootstrap.min.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/daterangepicker/daterangepicker.css' %}">
+<script src="{% static 'plugins/daterangepicker/moment.min.js' %}"></script>
+<script src="{% static 'plugins/daterangepicker/daterangepicker.js' %}"></script>
+<style>
+   #modal-localizado .modal-body {
+      max-height: 500px;
+      overflow-y: scroll;
+   }
+   .select2-container .select2-selection--single .select2-selection__rendered{
+      margin-top: 0px;
+   }
+   .nav-tabs-custom > .nav-tabs > li.active{
+      border-top-color:#00a65a;
+   }
+</style> 
+  <div class="nav-tabs-custom">
+    <ul class="nav nav-tabs">
+      <li class="active"><a href="#tab_1" data-toggle="tab">Actualización de Clientes</a></li>
+      <li><a href="#tab_2" data-toggle="tab">Clientes Pendientes</a></li>
+    </ul>
+    <div class="tab-content">
+      <!-- CLIENTES NORMALES -->
+      <div class="tab-pane active table-responsive no-padding" id="tab_1">
+         <table class="table table-hover" id="tabla_cliente">
+            <tr>
+               <th class="text-center">Nombre de Cliente</th>
+               <th colspan="2" class="text-center">Telefono Celular</th>
+               <th colspan="2" class="text-center">Telefono Casa</th>
+            </tr>
+            {% for cliente in clientes  %}
+               <tr class="tr-cliente" data-id='{{cliente.pk}}'>
+                  <td>{{cliente.primer_nombre}} {{cliente.segundo_nombre}} {{cliente.primer_apellido}} {{cliente.segundo_apellido}}</td>
+                  <td align="right"> {{cliente.telefono_celular}} </td>
+                  <td ><button type="button" class=" btn btn-success btn-sm llamada" data-numero='{{cliente.telefono_celular}}' data-cliente='{{cliente.pk}}' data-identidad='{{cliente.identidad}}' data-nombre='{{cliente.primer_nombre}} {{cliente.primer_apellido}}'>Llamar</button></td>
+                  <td align="right">{{cliente.telefono_fijo}}</td>
+                  <td><button type="button" class="btn btn-success btn-sm llamada" data-numero='{{cliente.telefono_fijo}}' data-cliente='{{cliente.pk}}' data-identidad='{{cliente.identidad}}' data-nombre='{{cliente.primer_nombre}} {{cliente.primer_apellido}}'>Llamar</button></td>
+               </tr>
+            {% endfor %}
+         </table>
+      </div>
+      <!-- CLIENTES PENDIENTES -->
+      <div class="tab-pane table-responsive no-padding" id="tab_2">
+         <table class="table table-hover" id="tabla_cliente_pendiente">
+            <tr>
+               <th class="text-center">Nombre de Cliente</th>
+               <th colspan="2" class="text-center">Telefono Celular</th>
+               <th colspan="2" class="text-center">Telefono Casa</th>
+               <th colspan="1">Fecha/Hora Devolución de Llamada</th>
+               <th colspan="1">Nombre Contacto</th>
+               <th colspan="1">Numero Contacto</th>
+            </tr>
+            {% for cliente in clientes_pendientes  %}
+               <tr class="tr-cliente" data-id='{{cliente.cliente_pendiente.pk}}'>
+                  <td>{{cliente.cliente_pendiente.primer_nombre}} {{cliente.cliente_pendiente.segundo_nombre}} {{cliente.cliente_pendiente.primer_apellido}} {{cliente.cliente_pendiente.segundo_apellido}}</td>
+                  {% if cliente.telefono == cliente.cliente_pendiente.telefono_celular %}
+                    <td align="right"> <span class="glyphicon glyphicon-warning-sign" aria-hidden="true"></span>  {{cliente.cliente_pendiente.telefono_celular}} </td>
+                  {% else %}
+                    <td align="right"> {{cliente.cliente_pendiente.telefono_celular}} </td>
+                  {% endif %}
+                  <td ><button type="button" class="btn btn-success btn-sm llamada" data-numero='{{cliente.cliente_pendiente.telefono_celular}}' data-cliente='{{cliente.cliente_pendiente.pk}}' data-identidad='{{cliente.cliente_pendiente.identidad}}' data-nombre='{{cliente.cliente_pendiente.primer_nombre}} {{cliente.cliente_pendiente.primer_apellido}}'>Llamar</button></td>
+                  {% if cliente.telefono == cliente.cliente_pendiente.telefono_fijo %}
+                    <td align="right"> <span class="glyphicon glyphicon-warning-sign" aria-hidden="true"></span>  {{cliente.cliente_pendiente.telefono_fijo}} </td>
+                  {% else %}
+                    <td align="right"> {{cliente.cliente_pendiente.telefono_fijo}} </td>
+                  {% endif %}
+                  <td><button type="button" class="btn btn-success btn-sm llamada" data-numero='{{cliente.cliente_pendiente.telefono_fijo}}' data-cliente='{{cliente.cliente_pendiente.pk}}' data-identidad='{{cliente.cliente_pendiente.identidad}}' data-nombre='{{cliente.cliente_pendiente.primer_nombre}} {{cliente.cliente_pendiente.primer_apellido}}'>Llamar</button></td>
+                  <td>{{cliente.devolver_llamada}}</td>
+                  {% if cliente.nombre_contacto != None %} <td>{{cliente.nombre_contacto}}</td> {% else %} <td></td> {% endif %}
+                  {% if cliente.telefono_contacto != None %} <td>{{cliente.telefono_contacto}}</td> {% else %} <td></td> {% endif %}
+                  
+               </tr>
+            {% endfor %}
+         </table>
+      </div>
+    </div>
+  </div>
+
+    <!-- DETALLE CLIENTES -->
+   <div class="box box-success">
+      <div class="row">
+         <div class="col-xs-4">
+            <div class="box-body">
+               <div class="row">
+                  <div class="col-md-12 page-header"><h4><b> Información del Cliente </b></h4></div>
+               </div>
+               <div class="row">
+                  <div class="col-md-6"><label>MONTO OPORTUNIDAD:</label></div>
+                  <div class="col-md-6"><span id="cliente-monto"></span></div>
+               </div>
+               <div class="row">
+                  <div class="col-md-6"><label>Identidad:</label></div>
+                  <div class="col-md-6"><span id="cliente-id"></span></div>
+               </div>
+               <div class="row">
+                  <div class="col-md-6"><label>Nombre del Cliente:</label></div>
+                  <div class="col-md-6"><span id="cliente-nombre"></span></div>
+               </div>
+               <div class="row">
+                  <div class="col-md-6"><label>Sexo:</label></div>
+                  <div class="col-md-6"><span id="cliente-sexo"></span></div>
+               </div>
+               <div class="row">
+                  <div class="col-md-6"><label>Telefono Celular:</label></div>
+                  <div class="col-md-6"><span id="cliente-celular"></span></div>
+               </div>
+               <div class="row">
+                  <div class="col-md-6"><label>Telefono Fijo:</label></div>
+                  <div class="col-md-6"><span id="cliente-fijo"></span></div>
+               </div>
+               <div class="row">
+                  <div class="col-md-6"><label>Correo Electronico:</label></div>
+                  <div class="col-md-6"><span id="cliente-correo"></span></div>
+               </div>
+            </div>
+         </div>
+
+
+         <div class="col-xs-8">
+            <div class="box-body">
+               <div class="row">
+                  <div class="col-md-12 page-header"><h4><b> Historial de Oportunidades </b></h4></div>
+               </div>
+               <div class="box-body table-responsive no-padding">
+                  <table class="table table-bordered" id="tabla_gestiones">
+                     <tr>
+                        <th>Agente</th>
+                        <th>Fecha/Hora</th>
+                        <th>Telefono</th>
+                        <th>Monto</th>
+                     </tr>
+                  </table>
+               </div>
+            </div>
+         </div>
+      </div>  
+   </div>  
+
+   <!-- Modal LLAMANDO -->
+   <div class="modal fade" id="llamada" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+     <div class="modal-dialog" role="document">
+       <div class="modal-content">
+         <div class="modal-header">
+           <button type="button" class="close cerrar-modal" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+           <h4 class="modal-title" id="myModalLabel">Llamando...</h4>
+         </div>
+         <div class="modal-body">
+            <input type="hidden" name="" id="valor-reloj" value="comenzar">
+            <input type="hidden" name="cliente" id="modal-llamada-cliente" value="">
+            <input type="hidden" name="hora-inicio" id="modal-llamada-inicio" value="">
+            <div class="row">
+               <div class="col-sm-4 pull-right">
+                   <b><p> [
+                      <span class="hour">00</span>
+                      <span class="divider">:</span>
+                      <span class="minute">00</span>
+                      <span class="divider">:</span>
+                      <span class="second">00</span>
+                      ]
+                   </p></b>
+               </div>
+               <div class="col-sm-8 h4">
+                  <label> Identidad: </label> <span id="modal-llamada-identidad" ></span> <br>
+                  <label> Cliente: </label> <span id="modal-llamada-nombre" ></span> <br>
+                  <label> Numero: </label>  <span id="modal-llamada-numero" ></span> <br><br>
+               </div>
+            </div>
+            <div align="center">
+               <button type="button" class="btn btn-success btn-lg " id="btn-localizado">Cliente Localizado</button>
+               <button type="button" class="btn btn-danger btn-lg " id="btn-no-localizado">Cliente NO Localizado</button>
+            </div>
+         </div>
+       </div>
+     </div>
+   </div>
+
+
+   <!-- Modal NO LOCALIZADO -->
+   <div class="modal fade" id="modal-no-localizado" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+     <div class="modal-dialog" role="document">
+       <div class="modal-content">
+         <div class="modal-header">
+           <button type="button" class="close cerrar-modal" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+           <h4 class="modal-title" id="myModalLabel">Cliente No Localizado</h4>
+         </div>
+         <form method="post" accept-charset="utf-8" id="form-no-localizado">
+            <div class="modal-body">
+               {% csrf_token %}
+               <input type="hidden" name="metodo" id="valor-reloj" value="no-localizado">
+               <input type="hidden" name="" id="valor-reloj" value="comenzar">
+               <input type="hidden" name="modal-no-localizado-cliente" id="modal-no-localizado-cliente" value="">
+               <input type="hidden" name="hora-inicio" id="modal-no-localizado-inicio" value="">
+               <input type="hidden" name="telefono" id="modal-no-localizado-telefono" value="">
+               <input type="hidden" name="razon" id="modal-no-localizado-razon" value="">
+               <div class="row">
+                  <div class="col-sm-4 pull-right">
+                      <b><p>  [
+                         <span class="hour">00</span>
+                         <span class="divider">:</span>
+                         <span class="minute">00</span>
+                         <span class="divider">:</span>
+                         <span class="second">00</span>
+                         ]
+                      </p></b>
+                  </div>
+                  <div class="col-sm-8 h4">
+                     <label> Cliente: </label> <span id="modal-no-localizado-nombre" ></span> <br>
+                     <label> Numero: </label>  <span id="modal-no-localizado-numero" ></span> <br><br>
+                  </div>
+               </div>
+
+               <div align="center">
+                  <p> <b> RAZONES CLIENTE NO LOCALIZADO </b> </p>
+                  <div class="row box-body">
+                     <div class="row">
+                        <div class="col-md-6"><button type="submit" class="btn btn-primary btn-lg btn-block form-group no-localizado" data-id='1'>Número Equivocado</button></div>
+                        <div class="col-md-6"><button type="submit" class="btn btn-primary btn-lg btn-block form-group no-localizado" data-id='2'>Número Ocupado</button></div>
+                     </div>
+                     <br>
+                     <div class="row">
+                        <div class="col-md-6"><button type="submit" class="btn btn-primary btn-lg btn-block form-group no-localizado" data-id='3'>Teléfono Desactivo</button></div>
+                        <div class="col-md-6"><button type="submit" class="btn btn-primary btn-lg btn-block form-group no-localizado" data-id='4'>No Contesta</button></div>
+                     </div>
+                     <br>
+                     <div class="row">
+                        <div class="col-md-6"><button type="submit" class="btn btn-primary btn-lg btn-block form-group no-localizado" data-id='5'>OTRO</button></div>
+                        <div class="col-md-6"><input type="text" class="form-control input-lg" name="comentarios" id="comentarios" value="" placeholder="Observaciones/Comentarios"></div>
+                     </div>
+                  </div>
+               </div>
+            </div>
+         </form>
+       </div>
+     </div>
+   </div>
+
+   <!-- Modal LOCALIZADO -->
+   <div class="modal fade" id="modal-localizado" role="dialog" aria-labelledby="myModalLabel">
+     <div class="modal-dialog modal-lg" role="document">
+       <div class="modal-content">
+         <div class="modal-header">
+           <button type="button" class="close cerrar-modal" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+           <h4 class="modal-title" id="myModalLabel">Llamada Prospectación</h4>
+         </div>
+         <form method="post" accept-charset="utf-8" id="formulario-llamada">
+            <div class="modal-body">
+               {% csrf_token %}
+               <input type="hidden" name="metodo" value="actualizar">
+               <input type="hidden" name="" id="valor-reloj" value="comenzar">
+               <input type="hidden" name="modal-localizado-cliente" id="modal-localizado-cliente" value="">
+               <input type="hidden" name="hora-inicio" id="modal-localizado-inicio" value="">
+               <input type="hidden" name="telefono" id="modal-localizado-telefono" value="">
+               <input type="hidden" name="tipo-gestion" id="modal-localizado-tipo-gestion" value="">
+               <div class="row">
+                  <div class="col-sm-4 pull-right">
+                      <b><p> [
+                         <span class="hour">00</span>
+                         <span class="divider">:</span>
+                         <span class="minute">00</span>
+                         <span class="divider">:</span>
+                         <span class="second">00</span>
+                         ]
+                      </p></b>
+                      <div>
+                        <button type="submmit" class="btn btn-warning btn-block" id="btn-devolver-llamada">Devolver Llamada</button>
+                      </div>
+                      
+                  </div>
+                  <div class="col-sm-8 h4">
+                     <label> Identidad: </label> <span id="modal-localizado-identidad" ></span> <br>
+                     <label> Cliente: </label> <span id="modal-localizado-nombre" ></span> <br>
+                     <label> Numero: </label>  <span id="modal-localizado-numero" ></span> <br>
+                     <label> Sexo: </label>  <span id="modal-localizado-sexo" ></span> 
+                  </div>
+               </div>
+               <p class="page-header"></p>
+               <p class="text-center sub-style">
+               DATOS GENERALES
+               </p>
+               <p class="page-header"></p>
+               <div class="row">
+                  <div class="col-sm-12 ">
+                      <input type="radio" name="opcion" value="" id="opcion_1"> Cliente no esta interesado <br>
+                  
+                  </div>
+               </div>
+               <div class="row">
+                  <div class="col-sm-4">
+                    <input type="radio" name="opcion" value="" id="opcion_2"> Cliente acudirá a Sucursal
+                  </div>
+                  <div class="col-sm-3">
+                    <input type="text" name="" value="" placeholder="" class="form-control fecha opcion opcion_2" disabled>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-sm-4">
+                    <input type="radio" name="opcion" value="" id="opcion_3"> Cliente tiene reclamo y acudirá a Sucursal
+                  </div>
+                  <div class="col-sm-3">
+                    <select name="" class="opcion opcion_3" disabled>
+                      <option value=""> MATRIZ </option>
+                      <option value=""> TEPEYAC </option>
+                      <option value=""> PARQUE LA LIBERTAD </option>
+                      <option value=""> PARQUE VALLE </option>
+                      <option value=""> CENTRO 5TA. AVENIDA </option>
+                      <option value=""> KENNEDY </option>
+                      <option value=""> MEDINA CONCEPCION </option>
+                      <option value=""> BELEN </option>
+                      <option value=""> PLAZA CENTRAL </option>
+                      <option value=""> AVENIDA SAN ISIDRO </option>
+                      <option value=""> OFICINA REGIONAL </option>
+                      
+                      <option value=""> DIONISIO DE HERRERA </option>
+                      <option value=""> CENTRO EL PROGRESO </option>
+                      <option value=""> SAN PABLO </option>
+                      <option value=""> FLORENCIA </option>
+                      <option value=""> CIRCUNVALACION </option>
+                      <option value=""> GRACIAS LEMPIRA 1 </option>
+                      <option value=""> LA ENTRADA, COPAN 1 </option>
+                      <option value=""> SANTA ROSA DE COPAN 1 </option>
+                      <option value=""> CORQUIN COPAN 1 </option>
+                      <option value=""> SAN MARCOS </option>
+                      <option value=""> COPAN RUINAS </option>
+                      <option value=""> IHCAFE </option>
+                      <option value=""> CIRCUNVALACION 105 </option>
+                      <option value=""> CORPORATIVO TORRE ALIANZA </option>
+                      <option value=""> LOARQUE </option>
+                      <option value=""> NOVACENTRO </option>
+                      <option value=""> TRIANGULO, SINUAPA </option>
+                      <option value=""> LA ENCARNACION </option>
+                      <option value=""> TROJES </option>
+                      <option value=""> CORPORATIVO PLAZA RIVOLI </option>
+                      <option value=""> MERCADO EL RAPIDO </option>
+                      <option value=""> ALMACENES EXTRA LAS HADAS </option>
+                      <option value=""> COMAYAGUA </option>
+                      <option value=""> HONDUTEL KENNEDY </option>
+                      
+                    </select>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-sm-4">
+                    <input type="radio" name="opcion" value="" id="opcion_4"> Pagará esta semana en
+                  </div>
+                  <div class="col-sm-3">
+                    <select name="" class="opcion opcion_4" disabled>
+                      <option value=""> MATRIZ </option>
+                      <option value=""> TEPEYAC </option>
+                      <option value=""> PARQUE LA LIBERTAD </option>
+                      <option value=""> PARQUE VALLE </option>
+                      <option value=""> CENTRO 5TA. AVENIDA </option>
+                      <option value=""> KENNEDY </option>
+                      <option value=""> MEDINA CONCEPCION </option>
+                      <option value=""> BELEN </option>
+                      <option value=""> PLAZA CENTRAL </option>
+                      <option value=""> AVENIDA SAN ISIDRO </option>
+                      <option value=""> OFICINA REGIONAL </option>
+                      
+                      <option value=""> DIONISIO DE HERRERA </option>
+                      <option value=""> CENTRO EL PROGRESO </option>
+                      <option value=""> SAN PABLO </option>
+                      <option value=""> FLORENCIA </option>
+                      <option value=""> CIRCUNVALACION </option>
+                      <option value=""> GRACIAS LEMPIRA 1 </option>
+                      <option value=""> LA ENTRADA, COPAN 1 </option>
+                      <option value=""> SANTA ROSA DE COPAN 1 </option>
+                      <option value=""> CORQUIN COPAN 1 </option>
+                      <option value=""> SAN MARCOS </option>
+                      <option value=""> COPAN RUINAS </option>
+                      <option value=""> IHCAFE </option>
+                      <option value=""> CIRCUNVALACION 105 </option>
+                      <option value=""> CORPORATIVO TORRE ALIANZA </option>
+                      <option value=""> LOARQUE </option>
+                      <option value=""> NOVACENTRO </option>
+                      <option value=""> TRIANGULO, SINUAPA </option>
+                      <option value=""> LA ENCARNACION </option>
+                      <option value=""> TROJES </option>
+                      <option value=""> CORPORATIVO PLAZA RIVOLI </option>
+                      <option value=""> MERCADO EL RAPIDO </option>
+                      <option value=""> ALMACENES EXTRA LAS HADAS </option>
+                      <option value=""> COMAYAGUA </option>
+                      <option value=""> HONDUTEL KENNEDY </option>
+                      
+                    </select>
+                  </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+              <button type="submit" class="btn btn-success" id='btn-actualizar'>Almacenar Datos</button>
+            </div>
+         </form>
+       </div>
+     </div>
+   </div>
+
+
+   <!-- Modal LLAMADA PENDIENTE -->
+   <div class="modal fade" id="modal-pendiente" role="dialog" aria-labelledby="myModalLabel">
+     <div class="modal-dialog modal-lg" role="document">
+       <div class="modal-content">
+         <div class="modal-header">
+           <button type="button" class="close cerrar-modal" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+           <h4 class="modal-title" id="myModalLabel">Devolver Llamada</h4>
+         </div>
+         <form method="post" accept-charset="utf-8" id="formulario-pendiente">
+            <div class="modal-body">
+               {% csrf_token %}
+               <input type="hidden" name="metodo" value="pendiente">
+               <input type="hidden" name="cliente" value="" id="modal-pendiente-cliente">
+               <input type="hidden" name="hora-inicio" id="modal-pendiente-inicio" value="">
+               <input type="hidden" name="telefono" id="modal-pendiente-telefono" value="">
+               <input type="hidden" name="tipo-gestion" id="modal-pendiente-tipo-gestion" value="">
+               <div class="row">
+                  <div class="col-sm-4 pull-right">
+                      <b><p> [
+                         <span class="hour">00</span>
+                         <span class="divider">:</span>
+                         <span class="minute">00</span>
+                         <span class="divider">:</span>
+                         <span class="second">00</span>
+                         ]
+                      </p></b>
+                  </div>
+                  <div class="col-sm-8 h4">
+                     <label> Identidad: </label> <span id="modal-pendiente-identidad" ></span> <br>
+                     <label> Cliente: </label> <span id="modal-pendiente-nombre" ></span> <br>
+                     <label> Numero: </label>  <span id="modal-pendiente-numero" ></span> <br>
+                     <label> Sexo: </label>  <span id="modal-pendiente-sexo" ></span> 
+                  </div>
+                </div>
+                <p class="page-header"></p>
+                <div class="row">
+                   <div class="col-sm-6">
+                      <label for="id_municipio_trabajo" class="col-xs-4 control-label">Fecha</label>
+                      <div class="col-xs-8">
+                         <input type="" name="fecha" id="id_fecha" class="form-control" required>
+                      </div>
+                   </div>
+                   <div class="col-sm-6">
+                      <label for="id_municipio_trabajo" class="col-xs-4 control-label">Hora</label>
+                      <div class="col-xs-8">
+                          <div class="form-group form-inline">
+                            <select class="form-control"  id='tiempo1' name="hora" required> 
+                                <option value="">---</option>
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                                <option value="5">5</option>
+                                <option value="6">6</option>
+                                <option value="7">7</option>
+                                <option value="8">8</option>
+                                <option value="9">9</option>
+                                <option value="10">10</option>
+                                <option value="11">11</option>
+                                <option value="1">12</option>
+                            </select>
+                            <select class="form-control"  id='tiempo2' name="minuto" required>  
+                                <option value="">---</option>
+                                <option value=":00">00</option>
+                                <option value=":10">10</option>
+                                <option value=":20">20</option>
+                                <option value=":30">30</option>
+                                <option value=":40">40</option>
+                                <option value=":50">50</option>
+                            </select>
+                            <select class="form-control" id='tiempo3' name="tiempo" required> 
+                                <option value="">---</option>
+                                <option value="am">AM</option>
+                                <option value="pm">PM</option>
+                            </select>
+                          </div>
+                      </div>
+                   </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-6">
+                      <label for="id_municipio_trabajo" class="col-xs-4 control-label">Nombre de Contacto</label>
+                      <div class="col-xs-8">
+                         <input type="" name="nombre_contacto" id="id_contacto" class="form-control" >
+                      </div>
+                   </div>
+                    <div class="col-sm-6">
+                      <label for="id_municipio_trabajo" class="col-xs-4 control-label">Número de Contacto</label>
+                      <div class="col-xs-8">
+                         <input type="" name="numero_contacto" id="id_numero_contacto" class="form-control">
+                      </div>
+                   </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+              <button type="submit" class="btn btn-warning" id='btn-devolver'>Devolver Llamada</button>
+            </div>
+         </form>
+       </div>
+     </div>
+   </div>
+
+   <!-- Modal ALERTA LLAMADA PENDIENTES -->
+   <div class="modal fade" id="recordatorio" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+     <div class="modal-dialog" role="document">
+       <div class="modal-content">
+         <div class="modal-body">
+         <button type="button" class="close cerrar-modal" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <div class="row">
+              
+               <div class="col-sm-12 text-center">
+                  <h3 class="text-center text-bold"> RECUERDA QUE TIENES ESTAS LLAMADAS PENDIENTES </h3><br>
+                  {% for recordatorio in recordatorios %}
+                    <div class="well">
+                      <label> CLIENTE: </label> {{recordatorio.cliente}}<br>
+                      <label> FECHA/HORA DE DEVOLUCION DE LLAMADA: </label> {{recordatorio.fecha}}
+                    </div>
+                  {% endfor %}
+               </div>
+            </div>
+         </div>
+       </div>
+     </div>
+   </div>
+
+
+<script>
+  $('input[name=opcion]').change(function(event) {
+    $('.opcion').prop('disabled', true);
+    $('.'+$(this).attr('id')).prop('disabled', false );
+    console.log($(this).attr('id'))
+  });
+
+   $('.no-localizado').click(function(){
+      $('#modal-no-localizado-razon').val($(this).data('id'))
+      $('.no-localizado').prop('disabled', true)
+      $('#form-no-localizado').submit()
+   })
+   $('#id_departamento').prop('required', true);
+
+   var tiempo_corriendo = null;
+   //CERRAR MODAL
+   $('.cerrar-modal').click(function(){
+      clearInterval(tiempo_corriendo);
+      $(".hour").text(tiempo.hora < 10 ? '0' + '0' : '0');
+      $(".minute").text(tiempo.minuto < 10 ? '0' + '0' : '0');
+      $(".second").text(tiempo.segundo < 10 ? '0' + '0' : '00');
+      $('#valor-reloj').val('comenzar')
+   })
+
+   //AL DARLE CLICK EN EL TR DE LA TABLA 
+   $('#tabla_cliente tr.tr-cliente, #tabla_cliente_pendiente tr.tr-cliente').click(function(){
+      $('#tabla_cliente tr, #tabla_cliente_pendiente tr').removeClass('active')
+      $(this).addClass('active')
+      id = $(this).data('id')  
+
+      $.ajax({
+         url: "{% url 'actualizar_callcenter' %}",
+         data: { 
+            id: id
+         }
+      })
+      .done(function( data ) {
+        console.log(data)
+         if (data.persona != false) {
+            $('#cliente-monto').text('20,000.00')
+            $('#cliente-nombre').text(data.persona.primer_nombre + ' ' + data.persona.primer_apellido)
+            $('#cliente-id').text(data.persona.identidad)
+            $('#cliente-correo').text(data.persona.correo_electronico)
+            $('#cliente-fijo').text(data.persona.telefono_fijo)
+            $('#cliente-celular').text(data.persona.telefono_celular)
+            $('#formulario-llamada #id_telefono_fijo').val(data.persona.telefono_fijo)
+            $('#formulario-llamada #id_telefono_celular').val(data.persona.telefono_celular)
+            $('#modal-localizado-identidad').text(data.persona.identidad)
+            $('#modal-llamada-identidad').text(data.persona.identidad)
+            if (data.persona.sexo == 1) {
+               $('#cliente-sexo, #modal-localizado-sexo').text('Masculino')
+            }else{
+               $('#cliente-sexo, #modal-localizado-sexo').text('Femenino')
+            }
+
+            if(data.persona.con_coopcel == true){
+              $('#formulario-llamada #id_telefono_celular,  #formulario-llamada #id_telefono_fijo').prop('readonly', true)
+            }else{
+              $('#formulario-llamada #id_telefono_celular,  #formulario-llamada #id_telefono_fijo').prop('readonly', false)
+            }
+
+            if (data.gestiones.length > 0) {
+              string = ''
+              $( data.gestiones ).each(function(key, val) {
+                switch(key.tipo_gestion) {
+                  case 1:
+                      tipo_gestion = 'Cliente Actualizado'
+                      break;
+                  case 2:
+                      tipo_gestion = 'Cliente NO Actualizado'
+                      break;
+                  case 2:
+                      tipo_gestion = 'Cliente Pendiente'
+                      break;
+                  case 2:
+                      tipo_gestion = 'Cliente no quizo dar Informacion'
+                      break;
+                  default:
+                      tipo_gestion = 'Actualizado por Busqueda'
+                }
+                string += '<tr>'
+                string += '   <td>' + val.agente__fist_name + ' ' + val.agente__last_name + '</td>'
+                string += '   <td>' + val.fecha + '</td>'
+                string += '   <td>' + val.telefono + '</td>'
+                string += '   <td>' + tipo_gestion + '</td>'
+                string += '</tr>'
+               console.log(val, key)
+              });
+              $('#tabla_gestiones tr td').remove()
+              $('#tabla_gestiones').append(string)
+            }else{
+              $('#tabla_gestiones tr td').remove()
+            }
+
+            //
+         }
+      })
+   })
+
+   //ESTE ES EL BOTON DE LLAMAR
+   $('button.llamada').click(function(){
+      $('#modal-llamada-numero').text($(this).data('numero'))
+      $('#modal-llamada-nombre').text($(this).data('nombre'))
+      $('#modal-llamada-cliente').val($(this).data('cliente'))
+      $('#llamada').modal({backdrop: 'static', keyboard: false, show:true})  
+
+      //TIMER 
+      if ($('#valor-reloj').val() == 'comenzar' ){  
+         clearInterval(tiempo_corriendo);  
+         tiempo = {
+           hora: 0,
+           minuto: 0,
+           segundo: 0
+         };            
+         tiempo_corriendo = setInterval(function(){
+            // Segundos
+            tiempo.segundo++;
+            if(tiempo.segundo >= 60)
+            {
+              tiempo.segundo = 0;
+              tiempo.minuto++;
+            }      
+
+            // Minutos
+            if(tiempo.minuto >= 60)
+            {
+              tiempo.minuto = 0;
+              tiempo.hora++;
+            }
+
+            $(".hour").text(tiempo.hora < 10 ? '0' + tiempo.hora : tiempo.hora);
+            $(".minute").text(tiempo.minuto < 10 ? '0' + tiempo.minuto : tiempo.minuto);
+            $(".second").text(tiempo.segundo < 10 ? '0' + tiempo.segundo : tiempo.segundo);
+         }, 1000);
+      }
+
+      var myDate = new Date();
+      console.log(myDate)
+      var displayDate = myDate.getHours()  + ':' + (myDate.getMinutes()) + ':' + (myDate.getSeconds()) ;
+      $('#modal-llamada-inicio, #modal-localizado-inicio, #modal-no-localizado-inicio').val(displayDate)
+   })
+
+   //EL BOTON NO LOCALIZADO
+   $('button#btn-no-localizado').click(function(){
+      $('#llamada').modal('hide')
+      $('#modal-no-localizado-numero').text($('#modal-llamada-numero').text())
+      $('#modal-no-localizado-telefono').val($('#modal-llamada-numero').text())
+      $('#modal-no-localizado-nombre').text($('#modal-llamada-nombre').text())
+      $('#modal-no-localizado-cliente').val($('#modal-llamada-cliente').val())
+      $('#modal-no-localizado').modal({backdrop: 'static', keyboard: false, show:true})
+   })
+
+   //BOTON CLIENTE LOCALIZADO
+   $('button#btn-localizado').click(function(){
+      $('#llamada').modal('hide')
+      $('#modal-localizado-numero').text($('#modal-llamada-numero').text())
+      $('#modal-localizado-telefono').val($('#modal-llamada-numero').text())
+      $('#modal-localizado-nombre').text($('#modal-llamada-nombre').text())
+      $('#modal-localizado-cliente').val($('#modal-llamada-cliente').val())
+      $('#id_identidad').val($('#modal-llamada-identidad').val())
+      $('#modal-localizado').modal({backdrop: 'static', keyboard: false, show:true})
+   })
+$(document).ready(function() { 
+    $('select').select2({
+      theme:'bootstrap',
+      width: '100%'
+   })
+    $('#tiempo1, #tiempo2, #tiempo3').select2('destroy')
+    $('#id_numero_contacto,input[name=telefono_celular], input[name=telefono_fijo_trabajo], input[name=telefono_contacto], input[name=telefono_fijo], input[name=telefono_celular2]').attr({
+        onKeyDown:"if(this.value.length==8 && event.keyCode!=8) return false;",
+        type:'number'
+    })
+       
+});
+
+function llamada(tabla, valor, select){
+   $('#formulario-llamada #' + select).empty();
+   $('#formulario-llamada #' + select).append("<option value=''>---------------</option>");
+   console.log('', $('#formulario-llamada #id_departamento').val())
+   valor= $('#formulario-llamada #'+valor).val()
+   $.ajax({
+      type: "GET",
+      data:
+         { tabla: tabla, valor: valor },
+      url: "/cliente/ajax/",
+      success: function(msg){
+         $.each(msg, function(key, val){
+            $('#formulario-llamada #' + select).append("<option value="+val.id+">" + '' + val.codigo + ' | ' + val.nombre + "</option>");
+         });
+            $('#formulario-llamada #' + select).trigger("chosen:updated");
+      }
+   });
+}
+
+$('#formulario-llamada #id_departamento').change(function(){
+  console.log('PASO POR AQUI')
+   llamada('municipio', 'id_departamento', 'id_municipio' )
+})
+
+$('#formulario-llamada #id_departamento_trabajo').change(function(){
+   llamada('municipio', 'id_departamento_trabajo', 'id_municipio_trabajo' )
+})
+
+$('#id_tipo_empresa, #id_departamento_trabajo, #id_municipio_trabajo, #id_lugar_trabajo, #id_referencia_trabajo, #id_colonia').prop('required', true)
+$('#formulario-rechazado #id_tipo_empresa, #formulario-rechazado #id_departamento_trabajo, #formulario-rechazado #id_municipio_trabajo, #formulario-rechazado #id_lugar_trabajo, #formulario-rechazado #id_referencia_trabajo, #formulario-rechazado #id_colonia').prop('required', true)
+
+$('#id_tipo_empresa, #id_tipo_empresa').change(function(){
+   opcion = $("#id_tipo_empresa option:selected").text()
+   if (opcion == 'Ninguna' || opcion == 'Pensionado' || opcion == 'Jubilado'){
+      $('#id_departamento_trabajo, #id_municipio_trabajo, #id_lugar_trabajo, #id_referencia_trabajo, #id_telefono_fijo_trabajo, #id_correo_electronico_trabajo, #id_tipo_empresa, #id_puesto, #id_antiguedad_anios, #id_antiguedad_meses, #id_telefono_contacto, #id_rubro').prop('readonly', true)
+      $('#id_departamento_trabajo, #id_municipio_trabajo, #id_lugar_trabajo, #id_referencia_trabajo').prop('required', false)
+      $('#id_municipio_trabajo, #id_departamento_trabajo, #id_actividad_cliente').prop('disabled', true)
+   }else{
+      $('#id_departamento_trabajo, #id_municipio_trabajo, #id_lugar_trabajo, #id_referencia_trabajo, #id_telefono_fijo_trabajo, #id_correo_electronico_trabajo, #id_tipo_empresa, #id_puesto, #id_antiguedad_anios, #id_antiguedad_meses, #id_telefono_contacto, #id_rubro').prop('readonly', false)
+      $('#id_tipo_empresa, #id_departamento_trabajo, #id_municipio_trabajo, #id_lugar_trabajo, #id_referencia_trabajo').prop('required', true)
+      $('#id_municipio_trabajo, #id_departamento_trabajo, #id_actividad_cliente').prop('disabled', false)
+   }
+})
+
+$('#formulario-rechazado #id_tipo_empresa, #formulario-rechazado #id_tipo_empresa').change(function(){
+   opcion = $("#formulario-rechazado #id_tipo_empresa option:selected").text()
+   if (opcion == 'Ninguna'){
+      $('#formulario-rechazado #id_departamento_trabajo, #formulario-rechazado #id_municipio_trabajo, #formulario-rechazado #id_lugar_trabajo, #formulario-rechazado #id_referencia_trabajo, #formulario-rechazado #id_telefono_fijo_trabajo, #formulario-rechazado #id_correo_electronico_trabajo, #formulario-rechazado #id_tipo_empresa, #formulario-rechazado #id_puesto, #formulario-rechazado #id_antiguedad_anios, #formulario-rechazado #id_antiguedad_meses, #formulario-rechazado #id_telefono_contacto, #formulario-rechazado #id_rubro').prop('readonly', true)
+      $('#formulario-rechazado #id_departamento_trabajo, #formulario-rechazado #id_municipio_trabajo, #formulario-rechazado #id_lugar_trabajo, #formulario-rechazado #id_referencia_trabajo').prop('required', false)
+      $('#formulario-rechazado #id_municipio_trabajo, #formulario-rechazado #id_departamento_trabajo, #formulario-rechazado #id_actividad_cliente').prop('disabled', true)
+   }else{
+      $('#formulario-rechazado #id_departamento_trabajo, #formulario-rechazado #id_municipio_trabajo, #formulario-rechazado #id_lugar_trabajo, #formulario-rechazado #id_referencia_trabajo, #formulario-rechazado #id_telefono_fijo_trabajo, #formulario-rechazado #id_correo_electronico_trabajo, #formulario-rechazado #id_tipo_empresa, #formulario-rechazado #id_puesto, #formulario-rechazado #id_antiguedad_anios, #formulario-rechazado #id_antiguedad_meses, #formulario-rechazado #id_telefono_contacto, #formulario-rechazado #id_rubro').prop('readonly', false)
+      $('#formulario-rechazado #id_tipo_empresa, #formulario-rechazado #id_departamento_trabajo, #formulario-rechazado #id_municipio_trabajo, #formulario-rechazado #id_lugar_trabajo, #formulario-rechazado #id_referencia_trabajo').prop('required', true)
+      $('#formulario-rechazado #id_municipio_trabajo, #formulario-rechazado #id_departamento_trabajo, #formulario-rechazado #id_actividad_cliente').prop('disabled', false)
+   }
+})
+
+ $('#btn-actualizar').click(function(){
+    $('#id_municipio_trabajo, #id_departamento_trabajo').prop('disabled', false)
+    $('#modal-localizado-tipo-gestion').val(1)
+    $(this).prop('disabled', true)
+    $('#formulario-llamada').submit()
+ })
+
+$('#btn-devolver').click(function(){
+    $(this).prop('disabled', true)
+    $('#formulario-pendiente').submit()
+ })
+
+ $('#btn-devolver-llamada').click(function(){
+    event.preventDefault()
+    $('#modal-pendiente-tipo-gestion').val(3)
+
+
+    $('#modal-pendiente-numero').text($('#modal-localizado-numero').text())
+    $('#modal-pendiente-telefono').val($('#modal-localizado-numero').text())
+    $('#modal-pendiente-nombre').text($('#modal-localizado-nombre').text())
+    $('#modal-pendiente-inicio').val($('#modal-localizado-inicio').val())
+    $('#modal-pendiente-telefono').val($('#modal-localizado-telefono').val())
+    $('#modal-pendiente-cliente').val($('#modal-localizado-cliente').val())
+    $('#modal-pendiente-identidad').text($('#modal-localizado-identidad').text())
+    $('#modal-pendiente-sexo').text($('#modal-localizado-sexo').text())
+
+
+    $('#modal-localizado').modal('hide')
+    $('#modal-pendiente').modal('show')
+    //$('#formulario-llamada').submit()
+ })
+
+ $('#btn-no-contesto').click(function(){
+    event.preventDefault()
+    $('#modal-localizado-tipo-gestion').val(4)
+    $('#id_estao_civil_1').prop('checked', true)
+    $(this).prop('disabled', true)
+    $('#formulario-llamada').submit()
+ })
+
+   $("input[name=colonia], input[name=referencia_trabajo], input[name=referencia], input[name=lugar_trabajo], input[name=puesto], input[name=comentarios]").on('input', function(evt) {
+  $(this).val(function (_, val) {
+    return val.toUpperCase();
+  });
+});
+
+ $("input[name=colonia]").prop('autocomplete', 'off')
+ $.get('{% static "colonia.json" %}', function(data){
+    $("input[name=colonia]").typeahead({ source:data });
+  },'json');
+
+
+   //AL DARLE CLICK EN EL TR DE LA TABLA 
+   $('#tabla_cliente_rechazado tr.tr-cliente').click(function(){
+      $('#tabla_cliente_rechazado tr').removeClass('active')
+      $(this).addClass('active')
+      id = $(this).data('id')  
+
+      $.ajax({
+         url: "{% url 'actualizar_callcenter' %}",
+         data: { 
+            id: id,
+            metodo: 'Rechazado'
+         }
+      })
+      .done(function( data ) {
+        console.log(data.persona)
+         if (data.persona != false) {
+            $('#cliente-nombre').text(data.persona.primer_nombre + ' ' + data.persona.primer_apellido)
+            $('#cliente-id').text(data.persona.identidad)
+            $('#cliente-correo').text(data.persona.correo_electronico)
+            $('#cliente-fijo').text(data.persona.telefono_fijo)
+            $('#cliente-celular').text(data.persona.telefono_celular)
+            $('#formulario-rechazado #id_telefono_fijo').val(data.persona.telefono_fijo)
+            $('#formulario-rechazado #id_telefono_celular').val(data.persona.telefono_celular)
+            $('#formulario-rechazado #cliente-rechazado').val(data.persona.id)
+            $('#formulario-rechazado #codigo-cliente-rechazado').val(data.persona.codigo)
+
+            $('#modal-rechazado-identidad').text(data.persona.identidad)
+            if (data.persona.sexo == 1) {
+               $('#modal-rechazado-sexo, #cliente-sexo').text('Masculino')
+            }else{
+               $('#modal-rechazado-sexo, #cliente-sexo').text('Femenino')
+            }
+            
+            if(data.persona.con_coopcel == true){
+              $('#formulario-rechazado #id_telefono_celular, #formulario-rechazado #id_telefono_fijo').prop('readonly', true)
+            }else{
+              $('#formulario-rechazado #id_telefono_celular, #formulario-rechazado #id_telefono_fijo').prop('readonly', false)
+            }
+
+            //DATOS DEL FORMULARIO
+            console.log(data.persona.estado_civil,data.persona.estado_civil, (parseInt(data.persona.estado_civil)-1))
+            $('#formulario-rechazado #id_telefono_fijo').val(data.persona.telefono_fijo)
+            $('#formulario-rechazado #id_telefono_celular').val(data.persona.telefono_celular)
+            $('#formulario-rechazado #id_departamento').val(data.persona.departamento).trigger('change')
+            $('#formulario-rechazado #id_colonia').val(data.persona.colonia)
+            $('#formulario-rechazado #id_referencia').val(data.persona.referencia)
+            $('#formulario-rechazado #id_estado_civil_'+(parseInt(data.persona.estado_civil)-1)).prop('checked', true)
+            $('#formulario-rechazado #id_telefono_celular2').val(data.persona.telefono_celular2)
+            $('#formulario-rechazado #id_correo_electronico').val(data.persona.correo_electronico)
+            $('#formulario-rechazado #id_ingresos_'+(parseInt(data.persona.ingresos)-1)).prop('checked', true)
+            $('#formulario-rechazado #id_monto_cuentas').val(data.persona.monto_cuentas)
+            $('#formulario-rechazado #id_departamento_trabajo').val(data.persona.departamento_trabajo).trigger('change')
+            $('#formulario-rechazado #id_lugar_trabajo').val(data.persona.lugar_trabajo)
+            $('#formulario-rechazado #id_referencia_trabajo').val(data.persona.referencia_trabajo)
+            $('#formulario-rechazado #id_telefono_fijo_trabajo').val(data.persona.telefono_fijo_trabajo)
+            $('#formulario-rechazado #id_correo_electronico_trabajo').val(data.persona.correo_electronico_trabajo)
+            $('#formulario-rechazado #id_filial').val(data.persona.filial).trigger('change')
+            $('#formulario-rechazado #id_tipo_empresa').val(data.persona.tipo_empresa).trigger('change')
+            $('#formulario-rechazado #id_puesto').val(data.persona.puesto)
+            $('#formulario-rechazado #id_antiguedad_anios').val(data.persona.antiguedad_anios)
+            $('#formulario-rechazado #id_antiguedad_meses').val(data.persona.antiguedad_meses)
+            $('#formulario-rechazado #id_correo_electronico').val(data.persona.correo_electronico)
+            $('#formulario-rechazado #id_profesion_cliente').val(data.persona.profesion_cliente).trigger('change')
+            $('#formulario-rechazado #id_actividad_cliente').val(data.persona.actividad_cliente).trigger('change')
+            
+            setTimeout(function(){
+              $('#formulario-rechazado #id_municipio').val(data.persona.municipio).trigger('change')
+              $('#formulario-rechazado #id_municipio_trabajo').val(data.persona.municipio_trabajo).trigger('change')
+
+            }, 2000);
+
+             if (data.gestiones.length > 0) {
+              string = ''
+              $( data.gestiones ).each(function(key, val) {
+                switch(key.tipo_gestion) {
+                  case 1:
+                      tipo_gestion = 'Cliente Actualizado'
+                      break;
+                  case 2:
+                      tipo_gestion = 'Cliente NO Actualizado'
+                      break;
+                  case 2:
+                      tipo_gestion = 'Cliente Pendiente'
+                      break;
+                  case 2:
+                      tipo_gestion = 'Cliente no quizo dar Informacion'
+                      break;
+                  default:
+                      tipo_gestion = 'Actualizado por Busqueda'
+                }
+                string += '<tr>'
+                string += '   <td>' + val.agente__fist_name + ' ' + val.agente__last_name + '</td>'
+                string += '   <td>' + val.fecha + '</td>'
+                string += '   <td>' + val.telefono + '</td>'
+                string += '   <td>' + tipo_gestion + '</td>'
+                string += '</tr>'
+               console.log(val, key)
+              });
+
+              $('#tabla_gestiones tr td').remove()
+              $('#tabla_gestiones').append(string)
+            }else{
+              $('#tabla_gestiones tr td').remove()
+            }
+            //
+         }
+      })
+   })
+
+
+    //ESTE ES EL BOTON DE LLAMAR
+$('button.rechazado').click(function(){
+    console.log('OASI ASLDHASJDHKA')
+      $('#modal-rechazado-numero').text($(this).data('numero'))
+      $('#modal-rechazado-nombre').text($(this).data('nombre'))
+      $('#modal-rechazado-cliente').val($(this).data('cliente'))
+      $('#modal-rechazado').modal({backdrop: 'static', keyboard: false, show:true})  
+
+      //TIMER 
+      if ($('#valor-reloj').val() == 'comenzar' ){  
+         clearInterval(tiempo_corriendo);  
+         tiempo = {
+           hora: 0,
+           minuto: 0,
+           segundo: 0
+         };            
+         tiempo_corriendo = setInterval(function(){
+            // Segundos
+            tiempo.segundo++;
+            if(tiempo.segundo >= 60)
+            {
+              tiempo.segundo = 0;
+              tiempo.minuto++;
+            }      
+
+            // Minutos
+            if(tiempo.minuto >= 60)
+            {
+              tiempo.minuto = 0;
+              tiempo.hora++;
+            }
+
+            $(".hour").text(tiempo.hora < 10 ? '0' + tiempo.hora : tiempo.hora);
+            $(".minute").text(tiempo.minuto < 10 ? '0' + tiempo.minuto : tiempo.minuto);
+            $(".second").text(tiempo.segundo < 10 ? '0' + tiempo.segundo : tiempo.segundo);
+         }, 1000);
+      }
+
+      var myDate = new Date();
+      console.log(myDate)
+      var displayDate = myDate.getHours()  + ':' + (myDate.getMinutes()) + ':' + (myDate.getSeconds()) ;
+      $('#modal-rechazado-inicio').val(displayDate)
+   })
+
+
+function ajaxsace(tabla, valor, select){
+   $('#formulario-rechazado #' + select).empty();
+   $('#formulario-rechazado #' + select).append("<option value=''>---------------</option>");
+   valor= $('#formulario-rechazado #'+valor).val()
+   $.ajax({
+      type: "GET",
+      data:
+         { tabla: tabla, valor: valor },
+      url: "/cliente/ajax/",
+      success: function(msg){
+         $.each(msg, function(key, val){
+            $('#formulario-rechazado #' + select).append("<option value="+val.id+">" + '' + val.codigo + ' | ' + val.nombre + "</option>");
+         });
+            $('#formulario-rechazado #' + select).trigger("chosen:updated");
+      }
+   });
+}
+
+$('#formulario-rechazado #id_departamento').change(function(){
+   ajaxsace('municipio', 'id_departamento', 'id_municipio' )
+})
+
+$('#formulario-rechazado #id_departamento_trabajo').change(function(){
+   ajaxsace('municipio', 'id_departamento_trabajo', 'id_municipio_trabajo' )
+})
+
+ $('#id_fecha').daterangepicker({
+        //autoUpdateInput: false,
+        singleDatePicker: true,
+        showDropdowns: true,
+        minDate: moment(),
+        locale: {
+          format: 'YYYY-MM-DD',
+
+          daysOfWeek: [
+            "Do",
+            "Lu",
+            "Ma",
+            "Mi",
+            "Ju",
+            "Vi",
+            "Sa"
+        ],
+        monthNames: [
+            "Enero",
+            "Febrero",
+            "Marzo",
+            "Abril",
+            "Mayo",
+            "Junio",
+            "Julio",
+            "Agosto",
+            "Septiembre",
+            "Octubre",
+            "Noviembre",
+            "Diciembre"
+        ],
+        },
+    })
+
+
+</script>
+
+{% endblock %}

@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+
+
+{% block contenido %}
+
+<link rel="stylesheet" href="{% static 'plugins/daterangepicker/daterangepicker.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/datatables/dataTables.bootstrap.css' %}">
+<script src="{% static 'plugins/daterangepicker/moment.min.js' %}"></script>
+<script src="{% static 'plugins/daterangepicker/daterangepicker.js' %}"></script>
+<script src="{% static 'plugins/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'plugins/datatables/dataTables.bootstrap.min.js' %}"></script>
+
+   <div class="box box-success">
+      <div class="box-header with-border">
+         <h3 class="box-title">Rendimiento de Operadores</h3>
+      </div>
+      <div class="box-body">
+      <form method="POST" class="form-inline">
+        {% csrf_token %}
+        <label for="fecha"> Fecha </label> 
+        <input type="text" class="form-control" value="{{fecha}}" name="fecha" id="id_fecha" required> 
+        <button class="btn btn-success">Generar Reporte</button>
+      </form>
+         <table id="tabla_cliente" class="table">
+          <thead>
+            <tr>
+               <th>Nombre de Operador</th>
+               <th>Clientes Localizados / Actualizados</th>
+               <th>Clientes No Localizados</th>
+               <th>Total de Llamadas</th>
+            </tr>            
+          </thead>
+          <tbody>
+            {% for gestion in clientes  %}
+               <tr class="tr-cliente" data-id='{{gestion.pk}}'>
+                  <td>{{gestion.agente__first_name}} {{gestion.agente__last_name}}</td>
+                  <td>{{gestion.total_localizado}}</td>
+                  <td>{{gestion.total_no_localizado}}</td>
+                  <td>{{gestion.total}} </td>
+               </tr>
+            {% endfor %}
+          </tbody>
+         </table>
+      </div>
+   </div>
+
+<script type="text/javascript">
+
+    $('#id_fecha').daterangepicker({
+        //autoUpdateInput: false,
+        singleDatePicker: true,
+        showDropdowns: true,
+        maxDate: moment(),
+        locale: {
+          format: 'YYYY-MM-DD',
+
+          daysOfWeek: [
+            "Do",
+            "Lu",
+            "Ma",
+            "Mi",
+            "Ju",
+            "Vi",
+            "Sa"
+        ],
+        monthNames: [
+            "Enero",
+            "Febrero",
+            "Marzo",
+            "Abril",
+            "Mayo",
+            "Junio",
+            "Julio",
+            "Agosto",
+            "Septiembre",
+            "Octubre",
+            "Noviembre",
+            "Diciembre"
+        ],
+        },
+    }).val('{{fecha}}');
+  
+  $(function () {
+    $('#tabla_cliente').DataTable({
+      "paging": true,
+      "lengthChange": false,
+      "searching": true,
+      "ordering": true,
+      "info": false,
+      "autoWidth": false
+    });
+  });
+</script>
+
+{% endblock %}

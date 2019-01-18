@@ -1,0 +1,204 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+{% load bootstrap %}
+
+{% block titulo %}
+{% endblock %}
+
+{% block contenido %}
+<link rel="stylesheet" href="{% static 'css/custom.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/select2/select2.min.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/select2/select2-bootstrap.min.css' %}">
+<link rel="stylesheet" href="{% static 'plugins/bootstrap-datepicker/css/bootstrap-datepicker.css' %}">
+
+<script src="{% static 'plugins/bootstrap-datepicker/js/bootstrap-datepicker.js' %}"></script>
+<script src="{% static 'plugins/bootstrap-datepicker/locales/bootstrap-datepicker.es.min.js' %}"></script>
+<script src="{% static 'plugins/select2/select2.min.js' %}"></script>
+
+<style type="text/css">
+   label{
+      font-weight: normal !important;
+   }
+</style>
+
+<div class="loader"></div>
+
+<!-- RESPUESTA DEL CLIENTE -->
+<div class="box box-success">
+   <div class="box-header with-border">
+      <h3 class="box-title">Reclamo Cliente </h3>
+      <a href="{% url 'menu' %}" class="pull-right"> << Atras </a>
+   </div>
+   <div class="box-body">
+      <form method="post" class="form-horizontal" accept-charset="utf-8" id="formulario-direccion">
+         {% csrf_token %}
+         <div class="form-group">
+            <label for="inputEmail3" class="col-sm-3 control-label"><b>Categoria de Reclamo</b></label>
+            <div class="col-sm-5">
+               <select name="categoria" id='id_categoria' class="form-control" required>
+                  <option value="">-----------------</option>
+                  {% for categoria in categorias %}
+                     <option value="{{categoria.codigo}}">{{categoria.nombre}}</option>
+                  {% endfor %}
+               </select>
+            </div>
+         </div>
+
+         <div class="form-group">
+            <label for="inputEmail3" class="col-sm-3 control-label"><b>Tipo de Reclamo</b></label>
+            <div class="col-sm-5">
+               <select name="tipo_reclamo" id="id_tipo_reclamo" class="form-control" required>
+                  <option value="">-----------------</option>
+               </select>
+            </div>
+
+
+         </div>
+
+
+
+         <div class="form-group form-inline">
+            <label for="" class="col-sm-3 control-label"><b>Identidad del Cliente</b></label>
+            <div class="col-sm-5">
+               <input type="text" name="identidad" id="id_identidad" value="" class="form-control" required>
+               <button type="button" class="btn btn-primary" id="buscar_identidad"><span class="glyphicon glyphicon-search" aria-hidden="true"></span></button>
+            </div>
+         </div>
+         
+         <div class="form-group form-inline" id="div-cliente">
+            <label for="" class="col-sm-3 control-label"><b>Nombre del Cliente</b></label>
+            <input type="hidden" name="cliente" id="id_cliente" value="" class="form-control" readonly>
+            <div class="col-sm-5" id="nombre_cliente"></div>
+         </div>
+
+
+         <div  id="observaciones" style="display: none;">
+            <div class="form-group" id="mtcn" style="display: none;">
+               <label for="" class="col-sm-3 control-label"><b>MTCN</b></label>
+               <div class="col-sm-5">
+                  <input type="text" name="mtcn" id="id_mtcn" value="" class="form-control">
+               </div>
+            </div>
+
+            <div class="form-group">
+               <label for="inputEmail3" class="col-sm-3 control-label"><b>Sucursal</b></label>
+               <div class="col-sm-5">
+                  <select name="sucursal" id='id_sucursal' class="form-control">
+                     <option value="">-----------------</option>
+                     {% for sucursal in sucursales %}
+                        <option value="{{sucursal.codigo_agencia}}">{{sucursal.nombre_agencia}}</option>
+                     {% endfor %}
+                  </select>
+               </div>
+            </div>
+
+            <div class="form-group">
+               <label for="" class="col-sm-3 control-label"><b>Correo del Cliente</b></label>
+               <div class="col-sm-5">
+                  <input type="text" name="correo" id="id_identidad" value="" class="form-control">
+               </div>
+            </div>
+
+            <div class="form-group">
+               <label for="" class="col-sm-3 control-label"><b>Detalle del Reclamo</b></label>
+               <div class="col-sm-5">
+                   <textarea name="reclamo" class="form-control" rows="10"></textarea>
+               </div>
+            </div>
+         </div>
+         
+
+         <div class="col-sm-2 col-md-offset-6">
+            <button type="submit" class="btn btn-success pull-right" id='reclamo' disabled> Siguiente >> </button>
+         </div>
+
+
+         
+
+      </form>
+      <br>
+      <br>
+   </div>
+</div>
+<!--........................................................................................ -->
+
+
+<script>
+   //Este ajax se utiliza al momento de elegir una catogira, va a la BD y busca los tipos de reclamos que en la categoria
+   $('#id_categoria').change(function(){
+      $('#id_tipo_reclamo').empty().append('<option value="">-----------------</option>')
+      $.ajax({
+         url: '{% url "reclamo" %}',
+         data: {
+            codigo: $(this).val(),
+            metodo: 'categoria'
+         },
+      })
+      .done(function(response) {
+         $.each(response, function(index, el) {
+            option = '<option  value="' +  el.codigo + '"">' + el.nombre + '</option>';
+            $('#id_tipo_reclamo').append(option)
+         });
+      })
+
+      if( $(this).val() == 5){
+         $('#id_tipo_reclamo').attr('required', false);
+         $('#observaciones').show()
+         $('#mtcn').hide()
+      }else if ($(this).val() == 6 ){
+         $('#id_tipo_reclamo').attr('required', false);
+         $('#observaciones').show()
+         $('#mtcn').show()
+
+
+      }else{
+
+         $('#id_tipo_reclamo').attr('required', true);
+         $('#observaciones').hide()
+         $('#mtcn').hide()
+      }
+      
+   })
+   
+   //Validar la identidad
+   $('#id_identidad').keydown(function(event) {
+      // Allow special chars + arrows
+      if (event.keyCode == 46 || event.keyCode == 8 || event.keyCode == 9
+        || event.keyCode == 27 || event.keyCode == 13
+        || (event.keyCode == 65 && event.ctrlKey === true)
+        || (event.keyCode >= 35 && event.keyCode <= 39)){
+          return;
+      }else {
+        // If it's not a number stop the keypress
+        if (event.shiftKey || (event.keyCode < 48 || event.keyCode > 57) && (event.keyCode < 96 || event.keyCode > 105 )) {
+          event.preventDefault();
+        }
+      }
+    });
+
+   $('#buscar_identidad').click(function(event) {
+      $.ajax({
+         url: '{% url "reclamo" %}',
+         data: {
+            identidad: $('#id_identidad').val(),
+            metodo: 'buscar_identidad'
+         },
+      })
+      .done(function(response) { 
+         if (response.length == 0){
+            $('#nombre_cliente').text('NO SE ENCONTRO NINGUN REGISTRO CON ESA IDENTIDAD')  
+            $('#reclamo').prop('disabled', true)
+         }else{      
+            $.each(response, function(index, el) {
+               $('#nombre_cliente').text( el.cliente_interno + ' | '  + el.nombre)  
+               $('#id_cliente').val(el.cliente_id)  
+            }); 
+            $('#reclamo').attr('disabled', false)
+         } 
+         
+      })
+   });
+
+</script>
+
+{% endblock %}

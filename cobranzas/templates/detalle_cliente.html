@@ -1,0 +1,920 @@
+
+<!-- DETALLE DE CLIENTE -->
+<input type="hidden" id="persona_id" value="">
+<!-- DETALLE CLIENTES -->
+<div class="box box-solid">
+   <div class="row">
+      <div class="col-xs-12">
+         <div class="nav-tabs-custom">
+            <ul class="nav nav-tabs">
+               <li class="active"><a href="#tab_info_general" data-toggle="tab">Informacion General</a></li>
+               <li><a href="#tab_referencias" data-toggle="tab">Referencias</a></li>
+               <li><a href="#tab_detalle_cuentas" data-toggle="tab">Cuentas <i class="fa fa-warning" style="color:orange"></i></a> </li>
+               <li><a href="#tab_detalle_creditos" data-toggle="tab">Creditos</a></li>
+               <li><a href="#tab_detalle_pagos" data-toggle="tab">Pagos</a></li>
+               <li><a href="#tab_gestiones" data-toggle="tab">Gestiones</a></li>
+			      <li><a href="#tab_promesa" data-toggle="tab">Promesa de Pago</a></li>
+               <li><a href="#tab_transacciones_tarjetas" data-toggle="tab">Transacciones Tarjetas </a></li>
+               <li class="pull-right"><button class="btn btn-sm btn-info" style="margin-top: 4px" id="actualizar" >Actualizar Datos</button></li>
+            </ul>
+            <div class="tab-content">
+               <!-- INFORMACION GENERAL -->
+               <div class="tab-pane active  table-responsive no-padding" id="tab_info_general">
+                  <div class="box-body">
+                     <div class="col-md-6">
+                        <div class="row">
+                           <div class="col-md-3"><label>Identidad:</label></div>
+                           <div class="col-md-9"><span id="cliente-id">{{cliente.identidad}}</span></div>
+                        </div>
+                        <div class="row">
+                           <div class="col-md-3"><label>Codigo Cliente (CIF):</label></div>
+                           <div class="col-md-9"><span id="cliente-codigo_cliente">{{cliente.cliente_interno}}</span></div>
+                        </div>
+                        <div class="row">
+                           <div class="col-md-3"><label>Nombre del Cliente:</label></div>
+                           <div class="col-md-9"><span id="cliente-nombre">{{cliente.nombre}}</span></div>
+                        </div>
+                        <div class="row">
+                           <div class="col-md-3"><label>Cuenta:</label></div>
+                           <div class="col-md-9"><span id="cliente-cuenta">{{cliente.cuenta}}</span></div>
+                        </div>
+                        <div class="row">
+                           <div class="col-md-3"><label>Sexo:</label></div>
+                           <div class="col-md-9"><span id="cliente-sexo">{{cliente.sexo}}</span></div>
+                        </div>
+                        <div class="row">
+                           <div class="col-md-3"><label>Correo Electronico:</label></div>
+                           <div class="col-md-9"><span id="cliente-email">{{cliente.correo_electronico}}</span></div>
+                        </div>
+                        <div class="row">
+                           <div class="col-md-3"><label>Cantidad Creditos:</label></div>
+                           <div class="col-md-2 text-right"><span id="cliente-cantidad-credito">{{cliente.cant_creditos}}</span></div>
+                        </div>
+                        <div class="row">
+                           <div class="col-md-3"><label>Dias Atraso:</label></div>
+                           <div class="col-md-2 text-right"><span id="cliente-dias-atraso">{{cliente.dias_atraso}}</span></div>
+                        </div>
+                        <div class="row">
+                           <div class="col-md-3"><label>Cuotas Mora:</label></div>
+                           <div class="col-md-2 text-right"><span id="cliente-cuotas-mora">{{cliente.cuotas_mora}}</span></div>
+                        </div>
+                        <div class="row">
+                           <div class="col-md-3"><label>Capital Mora:</label></div>
+                           <div class="col-md-2 text-right"><span id="cliente-capital-mora">{{cliente.capital_mora}}</span></div>
+                        </div>
+                        <div class="row">
+                           <div class="col-md-3"><label>Intereses Mora:</label></div>
+                           <div class="col-md-2 text-right"><span id="cliente-intereses-mora">{{cliente.intereses_mora}}</span></div>
+                        </div>
+                        <div class="row">
+                           <div class="col-md-3"><label>Intereses Moratorio:</label></div>
+                           <div class="col-md-2 text-right"><span id="cliente-intereses-moratorio">{{cliente.intereses_moratorios}}</span></div>
+                        </div>
+                        <div class="row">
+                           <div class="col-md-3"><label>Otros Recargos:</label></div>
+                           <div class="col-md-2 text-right"><span id="cliente-otros-recargos">{{cliente.otros_recargos}}</span></div>
+                        </div>
+                        <div class="row">
+                           <div class="col-md-3 "><label>Saldo Total Creditos:</label></div>
+                           <div class="col-md-2 text-right"><span id="cliente-saldo-creditos">{{cliente.saldo_total_creditos}}</span></div>
+                        </div>
+                     </div>
+                     
+                  </div>
+               </div>
+               <!-- CUENTAS -->
+               <div class="tab-pane table-responsive no-padding" id="tab_detalle_cuentas">
+                  <!-- TABLA -->
+                  <table class="table table-bordered table-hover" id="tabla-cuentas">
+                     <tr>
+                        <th>Cuenta</th>
+                        <th>Fecha Apertura</th>
+                        <th>Tipo Cuenta</th>
+                        <th>Saldo</th>
+                     </tr>
+                     {% if request.session.cuentas %}
+                        {% for cuenta in request.session.cuentas%}
+                           <tr>
+                              <td>{{cuenta.cuenta}}</td>
+                              <td>{{cuenta.fecha_apertura}}</td>
+                              <td>{{cuenta.tipo_cuenta}}</td>
+                              <td>{{cuenta.saldo}}</td>
+                           </tr>
+                        {% endfor %}
+                     {% endif %}
+                  </table>
+               </div>
+               <!-- CREDITOS -->
+               <div class="tab-pane table-responsive no-padding" id="tab_detalle_creditos">
+                  <b> PRESTAMOS </b>
+                  <br>
+                  <br>
+                  <table class="table table-hover table-bordered" id="tabla-creditos">
+                     <tr>
+                        <th></th>
+                        <th>N. Credito</th>
+                        <th>Producto</th>
+                        <th>Agencia</th>
+                        <th>Saldo</th>
+                        <th>Moneda</th>
+                        <th>Cuenta</th>
+                        <th>Fecha Proximo Pago</th>
+                        <th>Dias Mora</th>
+                        <th>Cuotas Mora</th>
+                        <th>Saldo Mora</th>
+                        <th></th>
+                        <th></th>
+                     </tr>
+                     {% if request.session.creditos %}
+                        {% for credito in request.session.creditos %}
+                           <tr>
+                              <td align="right">{% if cliente.dias_atraso > 0 and cliente.dias_mora > 0 %} <span class="label label-danger">Mora</span> {% else %} <span class="label label-success">Sin Mora</span> {% endif %} </td></td>
+                              <td>{{credito.credito}}</td>
+                              <td>{{credito.producto}}</td>
+                              <td>{{credito.agencia}}</td>
+                              <td>{{credito.saldo}}</td>
+                              <td>{{credito.Moneda}}</td>
+                              <td>{{credito.cuenta}}</td>
+
+                              <td>{{credito.fecha_proximo_pago}}</td>
+                              <td>{{credito.dias_mora}}</td>
+                              <td>{{credito.cuotas_mora}}</td>
+                              <td>{{credito.saldo_total_creditos}}</td>
+                              <td>
+                                 <button  type="button" class="btn btn-success btn-sm historial-pago" data-credito="{{credito.credito}}">Historia Pago</button>
+                                 <button  type="button" class="btn btn-success btn-sm plan-pago" data-credito="{{credito.credito}}">Ver Plan Pago</button>
+                              </td>
+                              <td>
+                                 <button type="button" class="btn btn-success btn-sm monto-desembolsado" data-credito="{{credito.credito}}">+</button>
+                              </td>
+                           </tr>
+                        {% endfor %}
+                     {% endif %}
+                     
+                  </table>
+
+                  
+                  <br>
+                  <br>
+                  <b> TARJETAS DE CREDITO </b>
+                  <br>
+                  <br>
+                  <!-- TARJETAS -->
+                  <table class="table table-hover table-bordered" id="tabla-tarjetas">
+                     <tr>
+                        <th></th>
+                        <th>N. Tarjeta</th>
+                        <th>Mascara Tarjeta</th>
+                        <th>CodigoBin</th>
+                        <th>Descripcion  Bin</th>
+                        <th>Estado Tarjeta</th>
+                        <th>Fecha Proximo Pago</th>
+                        <th>Limite Credito HNL</th>
+                        <th>Saldo al Corte HNL</th>
+                        <th>Saldo Actual HN</th>
+                        
+                     </tr>
+                     {% if request.session.tarjetas %}
+                        {% for credito in request.session.tarjetas %}
+                        <tr>
+                           <td align="right"></td>
+                           <td>{{credito.NumeroTarjeta}}</td>
+                           <td>{{credito.CodigoBin}}</td>
+                           <td>{{credito.DescripcionBin}}</td>
+                           <td>{{credito.EstadoTarjeta}}</td>
+                           <td>{{credito.fechaProximoPago}}</td>
+                           <td>{{credito.LimiteCreditoHNL}}</td>
+
+                           <td>{{credito.SaldoAlCorteHNL}}</td>
+                           <td>{{credito.SaldoActualHN}}</td>
+                           
+                        </tr>
+                        {% endfor %}
+                     {% endif %}
+                     
+                  </table>
+               </div>
+               <!-- TRANSACCIONES TARJETAS -->
+               <div class="tab-pane table-responsive no-padding" id="tab_transacciones_tarjetas">
+                  <table class="table table-hover table-bordered" id="tabla-transacciones_tarjetas">
+                     <tr>
+                        <th>Fecha</th>
+                        <th>Hora</th>
+                        <th>Lugar</th>
+                        <th>Monto</th>
+                     </tr>
+                     {% if request.session.transacciones_tarjetas %}
+                        {% for transaccion in request.session.transacciones_tarjetas %}
+                           <tr>
+                              <td>{{transaccion.fecha}}</td>
+                              <td>{{transaccion.hora}}</td>
+                              <td>{{transaccion.lugar}}</td>
+                              <td>{{transaccion.monto}}</td>
+                           </tr>
+                        {% endfor %}
+                     {% endif %}
+
+                  </table>
+               </div>
+               <!-- PAGOS -->
+               <div class="tab-pane table-responsive no-padding" id="tab_detalle_pagos">
+                  <table class="table table-hover table-bordered" id="tabla-pago">
+                     <tr>
+                        <th>N. Credito</th>
+                        <th>Agencia</th>
+                        <th>Fecha Pago</th>
+                        <th>Capital</th>
+                        <th>Intereses</th>
+                        <th>Capital Vencido</th>
+                        <th>Recargo</th>
+                        <th>Otros</th>
+                        <th>Total Pago</th>
+                        <th>Tipo Pago</th>
+                        <th></th>
+                     </tr>
+                     {% if request.session.pagos %}
+                        {% for pago in request.session.pagos %}
+                           <tr>
+                              <td>{{pago.credito}}</td>
+                              <td>{{pago.sucursal}}</td>
+                              <td>{{pago.fecha}}</td>
+                              <td>{{pago.capital}}</td>
+                              <td>{{pago.intereses}}</td>
+                              <td>{{pago.capital_vencido}}</td>
+                              <td>{{pago.recargo2}}</td>
+                              <td>{{pago.otros}}</td>
+                              <td>{{pago.total}}</td>
+                              <td>{{pago.tipo_pago}}</td>
+                           </tr>
+                        {% endfor %}
+                     {% endif %}
+                  </table>
+               </div>
+               <!-- HISTORIAL DE GESTIONES -->
+               <div class="tab-pane table-responsive no-padding" id="tab_gestiones">
+                  <table class="table table-hover table-bordered" id="tabla-gestiones">
+                     <tr>
+                        <th>Tipo de Gestion</th>
+                        <th>Agente</th>
+                        <th>Fecha</th>
+                        <th>Hora</th>
+                        <th>Resultado</th>
+                        <th>Observaciones</th>
+                     </tr>
+                     {% if request.session.gestiones_cliente %}
+                        {% for gestion in request.session.gestiones_cliente %}
+                           <tr>
+                              <td>{{gestion.tipo_gestion__descripcion}}</td>
+                              <td> {% if gestion.agente__username is null %} {{gestion.nombre_gestor}} {% else %} {{gestion.agente__username}} {% endif %} </td>
+                              <td>{{gestion.inicio}}</td>
+                              <td>{{gestion.hora_inicio}}</td>
+                              <td>{{gestion.resultado_gestion__descripcion}}</td>
+                              <td width="500px">{{gestion.observaciones}}</td>
+                           </tr>
+                        {% endfor %}
+                     {% endif %}
+                  </table>
+               </div>
+			      <!-- PROMESA DE PAGO -->
+               <div class="tab-pane table-responsive no-padding" id="tab_promesa">
+                  <table class="table table-hover table-bordered" id="tabla-promesa">
+                     <tr>
+                        <th>Agente</th>
+                        <th>Fecha Llamada</th>
+                        <th>Hora Llamada</th>
+                        <th>Estado de Promesa</th>
+                        <th>Fecha de Promesa</th>
+                        <th>Monto de Promesa</th>
+
+                     </tr>
+                     {% if request.session.promesa_pago %}
+                        {% for gestion in request.session.promesa_pago %}
+                           <tr>
+                              <td>{{gestion.agente__username}}</td>
+                              <td>{{gestion.fecha_gestion}}</td>
+                              <td>{{gestion.hora_gestion}}</td>
+                              <td>{{gestion.estado}}</td>
+                              <td>{{gestion.fecha_promesa}}</td>
+                              <td>{{gestion.monto_promesa}}</td>
+                           </tr>
+                        {% endfor %}
+                     {% endif %}
+                  </table>
+               </div>
+               <!-- REFERENCIAS  -->
+               <div class="tab-pane table-responsive no-padding" id="tab_referencias">
+                  <div class="col-md-12">
+                     <table class="table table-bordered table-hover" id="tabla-referencias">
+                        <tr>
+                           <th> Tipo Relacion </th>
+                           <th> Referencia </th>
+                           <th> Direccion </th>
+                           <th> Contacto </th>
+                        </tr>
+                        {% if request.session.referencias %}
+                           {% for referencia in request.session.referencias%}
+                              <tr>
+                                 <td>{{referencia.tipo_relacion}}</td>
+                                 <td>{{referencia.referencia}}</td>
+                                 <td>{{referencia.direccion}}</td>
+                                 <td>{{referencia.contacto}}</td>
+                              </tr>
+                           {% endfor %}
+                        {% endif %}
+                     </table>
+                  </div>
+               </div>
+			</div>
+         </div>
+      </div>
+   </div>
+</div>
+
+
+<!-- ........................................................................................ -->
+<!-- Modal ALERTA LLAMADA PENDIENTES -->
+<div class="modal fade" id="recordatorio" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+   <div class="modal-dialog" role="document">
+      <div class="modal-content">
+         <div class="modal-body">
+            <button type="button" class="close cerrar-modal" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <div class="row">
+               <div class="col-sm-12 text-center">
+                  <h3 class="text-center text-bold"> RECUERDA QUE TIENES ESTAS LLAMADAS PENDIENTES </h3><br>
+                  {% for recordatorio in recordatorios %}
+                  <div class="well">
+                     <label> CLIENTE: </label> {{recordatorio.cliente}}<br>
+                     <label> FECHA/HORA DE DEVOLUCION DE LLAMADA: </label> {{recordatorio.fecha}}
+                  </div>
+                  {% endfor %}
+               </div>
+            </div>
+         </div>
+      </div>
+   </div>
+</div>
+<!-- ........................................................................................ -->
+
+
+<!-- ........................................................................................ -->
+<!-- Modal HISTORIAL DE PAGO -->
+<div class="modal fade" id="historial_pago" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+   <div class="modal-dialog modal-lg" role="document" style="width: 100%;">
+      <div class="modal-content">
+         <div class="modal-header">
+            <button type="button" class="close cerrar-modal" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="myModalLabel">Historial Pago de Credito</h4>
+         </div>
+         <div class="modal-body">
+            <input type="hidden" name="" id="valor-reloj" value="comenzar">
+            <input type="hidden" name="cliente" id="modal-llamada-cliente" value="">
+            <input type="hidden" name="hora-inicio" id="modal-llamada-inicio" value="">
+            <div class="row">
+               <div class="col-sm-12">
+                  <label> Cliente: </label> {{cliente.nombre}} <span class="nombre-cliente"></span>  <br>
+                  <label> Credito: </label> <span id="modal-credito"></span> <br>
+               </div>
+            </div>
+            <table class="table table-hover" id="tabla-historial">
+               <tr>
+                  <th>Fecha</th>
+                  <th>Hora</th>
+                  <th>Sucursal</th>
+                  <th align="right">Capital</th>
+                  <th align="right">Intereses Moratorios</th>
+                  <th align="right">Otros</th>
+                  <th align="right">Total Pago</th>
+                  <th>Tipo Pago</th>
+                  <th align="right">Dias de mora</th>
+                  <!-- HACER DESPUES -->
+               </tr>
+            </table>
+         </div>
+      </div>
+   </div>
+</div>
+<!-- .......................................................................................
+
+<button class="btn btn-default pull-right" id="correo-plan-pago"> Enviar Correo Electronico </button>. -->
+
+<!-- ........................................................................................ -->
+<!-- Modal PLAN DE PAGO -->
+<div class="modal fade" id="plan_pago" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+   <div class="modal-dialog" role="document">
+      <div class="modal-content">
+         <div class="modal-header">
+            <button type="button" class="close cerrar-modal" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="myModalLabel">Plan de Pago</h4>
+         </div>
+         <div class="modal-body" id="scroll">
+            <input type="hidden" name="" id="valor-reloj" value="comenzar">
+            <input type="hidden" name="cliente" id="modal-llamada-cliente" value="">
+            <input type="hidden" name="hora-inicio" id="modal-llamada-inicio" value="">
+            <div class="row">
+               <div class="col-sm-6">
+                  <label> Cliente: </label> {{cliente.nombre}} <span class="nombre-cliente"></span>  <br>
+                  <label> Credito: </label> <span id="modal-pago-credito" ></span> <br>
+               </div>
+               <div class="col-sm-6">
+                  <button class="btn btn-default pull-right" id="correo-plan-pago"> Enviar Correo Electronico </button>
+               </div>
+            </div>
+            <table class="table table-hover" id="tabla-plan-pago">
+               <tr>
+                  <th>Fecha</th>
+                  <th align="right">Cuota</th>
+                  <th align="right">Capital</th>
+                  <th align="right">Intereses</th>
+                  <!-- <th align="right">Días Mora</th> -->
+               </tr>
+            </table>
+         </div>
+      </div>
+   </div>
+</div>
+
+<!-- ........................................................................................ -->
+<!-- MODAL MONTO DESEMBOLSADO  -->
+<!-- #myModal 
+{
+    width: 700px; 
+    margin-top: -300px !important;
+    margin-left:  -350px !important; 
+} 
+
+#myModal .modal-body {
+    max-height: 525px;
+} -->
+<div class="modal fade" id="monto_desembolsado" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" >
+   <div class="modal-dialog modal-lg" role="document" style="width: 100%;">
+      <div class="modal-content">
+         <div class="modal-header">
+            <button type="button" class="close cerrar-modal" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="myModalLabel">Más información</h4>
+         </div>
+         <div class="modal-body" id="scroll">
+            <input type="hidden" name="" id="valor-reloj" value="comenzar">
+            <input type="hidden" name="cliente" id="modal-llamada-cliente" value="">
+            <input type="hidden" name="hora-inicio" id="modal-llamada-inicio" value="">
+            <div class="row">
+               <div class="col-sm-6">
+                  <label> Cliente: </label> {{cliente.nombre}} <span class="nombre-cliente"></span>  <br>
+                  <label> Credito: </label> <span id="modal-credito-desembolsado" ></span> <br>
+               </div>
+               
+            </div>
+            <table class="table table-hover" id="tabla-desembolso">
+               <tr>
+                     <th></th>
+                     <th>N. Credito</th>
+                     <th>Producto</th>
+                     <th>Agencia</th>
+                     <th>Saldo</th>
+                     <th>Monto</th>
+                     <th>Cuenta</th>
+                     <th>Fecha Proximo Pago</th>
+                     <th>Dias Mora</th>
+                     <th>Cuotas Mora</th>
+                     <th>Saldo Total</th>
+                     <th>Fecha vigencia</th>
+                     <th>Vencimiento</th>
+                     <th>Ejecutivo</th>
+               </tr>
+            </table>
+            <br><br>
+            
+            <h3>Garantías</h3>
+            <table class="table table-hover" id="tabla-garantias">
+               <tr>
+                     <th>Garantía Principal</th>
+                     <th>Tipo de Garantía</th>
+                     <th>Garantía</th>
+                     <th>Nombre Aval/ Codeudor</th>
+                     <th>Direccion</th>
+                     <th>Telefono</th>
+               </tr>
+            </table>
+         </div>
+      </div>
+   </div>
+</div>
+<!-- ........................................................................................ -->
+
+
+<!-- ........................................................................................ -->
+<!-- Modal CORREO ELECTRONICO -->
+<div class="modal fade" id="correo_plan_pago" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+   <div class="modal-dialog" role="document">
+      <div class="modal-content">
+         <div class="modal-header">
+            <button type="button" class="close cerrar-modal" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="myModalLabel">Enviar Correo Electronico</h4>
+         </div>
+         <div class="modal-body" id="scroll">
+            <form action="{% url 'enviar_correo' %}">
+               <input type="hidden" name="cliente" id="modal-correo-cliente" value="{{cliente.cliente}}">
+               <input type="hidden" name="credito" id="modal-correo-credito" value="">
+               <input type="hidden" name="metodo" id="modal-correo-credito" value="plan_pago">
+               <div class="row">
+                  <div class="col-sm-12">
+                     <label> Cliente: </label> {{cliente.nombre}} <span class="nombre-cliente"></span>  <br>
+                     <label> Credito: </label> <span class="credito" ></span> <br>
+                     <br>
+                        {% csrf_token %}
+                        <div class="form-group">
+                           <label for="exampleInputEmail1">Enviar a:</label>
+                           <input type="email" class="form-control" name="correo" id="exampleInputEmail1" placeholder="Email" value="{{cliente.correo_electronico}}">
+                        </div>
+                        <div class="form-group">
+                           <label for="mensaje">Mensaje adicional al plan de pago:</label>
+                           <textarea name="mensaje" class="form-control" id="mensaje" rows="10">
+Saludos {{cliente.nombre}},</textarea>
+                        </div>
+                        <button type="button" class="btn btn-default pull-right" id="mandar_correo">Enviar Plan de Pago</button>
+                  </div>
+               </div>
+            </form>
+         </div>
+      </div>
+   </div>
+</div>
+<!-- ........................................................................................ -->
+
+<script>
+
+   {% if recordatorios %}
+      $('#recordatorio').modal('show');
+   {% endif %}
+   //Al darle click a actualizar se muestra el loader
+   $('#actualizar').click(function(event) {
+      $('.loader').show()
+      setTimeout(function() {
+         $('.loader').hide()
+      }, 3000);
+   });
+   //Funcion para hacer un formato de miles con comas [1,200.00]
+   function numberWithCommas(x) {
+       return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+   }
+   function recargar(){
+      localStorage.clear();
+      location.href = location.href;
+   }
+
+      //Envio de informacion por correo electronico, abre el modal donde el agente pone la informacion necesaria
+      $('#correo-plan-pago').click(function(){
+         $('#plan_pago').modal('hide');
+         $('#correo_plan_pago').modal('show');
+
+         credito = $('#modal-pago-credito').text()
+         $('.credito').text(credito);
+         $('#modal-correo-credito').val(credito);
+      });
+
+      //Mandar el mensaje
+      $('#mandar_correo').click(function(){
+         $('.loader').show()
+         $.ajax({
+            url: '/cobranzas/enviar/correo',
+            data: { 
+               correo : $('#exampleInputEmail1').val(), 
+               credito : $('#modal-correo-credito').val(), 
+               mensaje : $('#mensaje').text(), 
+               metodo: 'plan_pago' },
+         })
+         .done(function(response) {
+            $('#correo_plan_pago').modal('hide');
+            $('.loader').hide()
+         })
+      });
+
+
+   function Actualizar() {
+      
+      //Historial del Pago
+      $('.historial-pago').click(function(event) {
+         $('.loader').show()
+         $("#tabla-historial").find("tr:gt(0)").remove();
+         credito = $(this).attr('data-credito')
+         $.ajax({
+            url: '/cobranzas/gestion/ajax',
+            data: { opcion : 'historial', credito : $(this).attr('data-credito') },
+         })
+         .done(function(response) {
+            
+            $.each(response.historial, function( index , registro ) {
+               fila  = '<tr>'
+               fila += '<td> ' + registro.fecha + ' </td>'
+               fila += '<td> ' + registro.hora + ' </td>'
+               fila += '<td> ' + registro.sucursal + ' </td>'
+               fila += '<td align="right"> ' + numberWithCommas(registro.capital) + ' </td>'
+               fila += '<td align="right"> ' + numberWithCommas(registro.intereses_moratorios) + ' </td>'
+               fila += '<td align="right"> ' + numberWithCommas(registro.otros) + ' </td>'
+               fila += '<td align="right"> ' + numberWithCommas(registro.total_pago) + ' </td>'
+               fila += '<td align="right"> ' + numberWithCommas(registro.tipo_pago) + ' </td>'
+               fila += '<td align="right"> ' + registro.dias_mora + ' </td>'
+               //HACER DESPUES
+               fila += '</tr>'
+               $('#tabla-historial').append(fila)
+            });
+
+            $('.loader').hide()
+            $('#modal-credito').text( credito)
+            $('#historial_pago').modal('show')
+         })
+      });
+
+      $('.plan-pago').click(function(event) {
+         $('.loader').show()
+         $("#tabla-plan-pago").find("tr:gt(0)").remove();
+         credito = $(this).attr('data-credito')
+         $.ajax({
+            url: '/cobranzas/gestion/ajax',
+            data: { opcion : 'plan_pago', credito : $(this).attr('data-credito') },
+         })
+         .done(function(response) {
+            $.each(response.plan, function( index , registro ) {
+               fila  = '<tr>'
+               fila += '<td> ' + registro.fecha + ' </td>'
+               fila += '<td align="right"> ' + registro.cuota + ' </td>'
+               fila += '<td align="right"> ' + registro.capital + ' </td>'
+               fila += '<td align="right"> ' + registro.intereses + ' </td>'
+               fila += '</tr>'
+               $('#tabla-plan-pago').append(fila)
+            });
+
+            $('.loader').hide()
+            $('#modal-credito').text(credito)
+            $('#plan_pago').modal('show')
+         })
+      });
+
+      $('.monto-desembolsado').click(function(event) {
+
+         $('.loader').show()
+         $("#tabla-desembolso").find("tr:gt(0)").remove();
+         $("#tabla-garantias").find("tr:gt(0)").remove();
+         credito = $(this).attr('data-credito');
+         $.ajax({
+
+            url: '/cobranzas/gestion/ajax',
+            data: { opcion : 'monto_desembolsado', credito : $(this).attr('data-credito') },
+         })
+         .done(function(response) {
+            $.each(response.creditos, function( index , registro ) {
+               
+               if ( registro.cuenta != null ) { cuenta =  registro.cuenta  } else { cuenta = '' }
+               if ( parseInt(registro.dias_mora) > 0 ) { label = '<span class="label label-danger">Mora</span>' } else { label = '<span class="label label-success">Sin Mora</span>' }
+               fila  = '<tr>'
+               fila += '<td align="right"> ' + label + ' </td>'
+               fila += '<td> ' + registro.credito + ' </td>'
+               fila += '<td> ' + registro.producto + ' </td>'
+               fila += '<td> ' + registro.agencia + ' </td>'
+               fila += '<td> ' + registro.saldo + ' </td>'
+               fila += '<td> ' + registro.monto + ' </td>'
+               fila += '<td> ' + cuenta + ' </td>'
+               fila += '<td> ' + registro.fecha_proximo_pago + ' </td>'
+               fila += '<td> ' + registro.dias_mora + ' </td>'
+               fila += '<td> ' + registro.cuotas_mora + '  ' + ' </td>'
+               fila += '<td> ' + registro.saldo_total_creditos + ' </td>'
+               fila += '<td> ' + registro.fecha_vigencia + '</td>'
+               fila += '<td> ' + registro.vencimiento + '</td>'
+               fila += '<td> ' + registro.ejecutivo + '</td>'
+             
+               fila += '</tr>'
+               $('#tabla-desembolso').append(fila)
+            });
+
+            console.log(response.garantias)
+            $.each(response.garantias, function( index , registro ) {
+               filag  = '<tr>'
+               filag += '<td>' + registro.garantia_principal + '</td>'
+               filag += '<td>' + registro.tipo + '</td>'
+               filag += '<td>' + registro.garantia + '</td>'
+               filag += '<td>' + registro.aval + '</td>'
+               filag += '<td>' + registro.direccion_aval + '</td>'
+               filag += '<td>' + registro.telefono + '</td>'
+               filag += '</tr>'
+               $('#tabla-garantias').append(filag)
+            });
+
+            $('.loader').hide()
+            $('#modal-credito-desembolsado').text(credito)
+            $('#monto_desembolsado').modal('show')
+         })
+      });
+   }
+
+   Actualizar()
+
+   $('#actualizar, #tabla_cliente tr.tr-cliente, #tabla_cliente_pendiente tr.tr-cliente, #tabla_cliente_sin_mora tr.tr-cliente, #tabla_cliente_promesa tr.tr-cliente, #tabla_cliente_castigados tr.tr-cliente').click(function(){
+      $('.loader').show()
+      $("#tabla-cuentas, #tabla-creditos, #tabla-transacciones_tarjetas, #tabla-pago, #tabla-gestiones, #tabla-promesa, #tabla-referencias").find("tr:gt(0)").remove();
+      
+      id = localStorage.getItem("id");
+
+      $('#actualizar, #tabla_cliente tr.tr-cliente, #tabla_cliente_pendiente tr.tr-cliente, #tabla_cliente_sin_mora tr.tr-cliente,  #tabla_cliente_promesa tr.tr-cliente, #tabla_cliente_castigados tr.tr-cliente').removeClass('active')
+      $(this).addClass('active')
+      
+      //Si el ID es nulo significa que no se ha creado, y por esta razon se crea
+      if (id == null){
+         id = $(this).data('id')
+         $('#persona_id').val(id);
+
+         //localStorage.setItem("id", id);
+         $('.nombre-cliente').text($(this).data('nombre'));
+      }
+
+      $.ajax({
+         url: "{% url 'morosidad_primera_cuota' %}",
+         data: {
+            id: id
+         }
+      })
+      .done(function( data ) {
+         console.log(data.tarjetas)
+         //Llenar la tabla GENERAL DE CLIENTES
+         if (data.persona != false) {
+
+            $.each(data.persona, function( index , registro ) {
+               $('#cliente-nombre').text(registro.nombre)
+               $('#cliente-id').text(registro.identidad)
+               $('#cliente-email').text(registro.correo_electronico)
+               $('#cliente-dias-atraso').text(registro.dias_atraso)
+               $('#cliente-cantidad-credito').text(registro.cant_creditos)
+               $('#cliente-cuotas-mora').text(registro.cuotas_mora)
+               $('#cliente-capital-mora').text(numberWithCommas(Number(registro.capital_mora).toFixed(2)))
+               $('#cliente-intereses-mora').text(numberWithCommas(Number(registro.intereses_mora).toFixed(2)))
+               $('#cliente-intereses-moratorio').text(numberWithCommas(Number(registro.intereses_moratorios).toFixed(2)))
+               $('#cliente-saldo-creditos').text(numberWithCommas(Number(registro.saldo_total_creditos).toFixed(2)))
+               $('#cliente-otros-recargos').text(numberWithCommas(Number(registro.otros_recargos).toFixed(2)))
+               $('#cliente-sexo').text(registro.sexo)
+               $('#cliente-cuenta').text(registro.cuenta)
+               $('#cliente-codigo_cliente').text(registro.codigo_cliente)
+            });
+         }
+
+          //Llenar la tabla de referencias
+         if(data.referencias != false){
+            $.each(data.referencias, function( index , registro ) {
+               fila = '<tr>'
+               fila += '<td> ' + registro.tipo_relacion + ' </td>'
+               fila += '<td> ' + registro.referencia + ' </td>'
+               fila += '<td> ' + registro.direccion + ' </td>'
+               fila += '<td> ' + registro.contacto + ' </td>'
+               fila += '</tr>'
+               $('#tabla-referencias').append(fila)
+            });
+         }
+
+         //Llenar la tabla de CUENTAS
+         if(data.cuentas != false){
+
+            $.each(data.cuentas, function( index , registro ) {
+               fila  = '<tr>'
+               fila += '<td> ' + registro.cuenta + ' </td>'
+               fila += '<td> ' + registro.fecha_apertura + ' </td>'
+               fila += '<td> ' + registro.tipo_cuenta + ' </td>'
+               fila += '<td> ' + numberWithCommas(registro.saldo) + ' </td>'
+               fila += '</tr>'
+
+               $('#tabla-cuentas').append(fila)
+            });
+         }
+
+         //Llenar la tabla de CREDITOS
+         if(data.creditos != false){
+                        
+            $.each(data.creditos, function( index , registro ) {
+               if ( registro.cuenta != null ) { cuenta =  registro.cuenta  } else { cuenta = '' }
+               if ( parseInt(registro.dias_mora) > 0 && parseInt(registro.cuotas_mora) > 0 ) { label = '<span class="label label-danger">Mora</span>' } else { label = '<span class="label label-success">Sin Mora</span>' }
+               fila  = '<tr>'
+               fila += '<td align="right"> ' + label + ' </td>'
+               fila += '<td> ' + registro.credito + ' </td>'
+               fila += '<td> ' + registro.producto + ' </td>'
+               fila += '<td> ' + registro.agencia + ' </td>'
+               fila += '<td> ' + numberWithCommas(registro.saldo) + ' </td>'
+               fila += '<td> ' +registro.Moneda+ ' </td>'
+               fila += '<td> ' + cuenta + ' </td>'
+               fila += '<td> ' + registro.fecha_proximo_pago + ' </td>'
+               fila += '<td> ' + registro.dias_mora + ' </td>'
+               fila += '<td> ' + registro.cuotas_mora + '  ' + ' </td>'
+               fila += '<td> ' + numberWithCommas(registro.saldo_total_creditos) + ' </td>'
+               fila += '<td>'
+               fila += '   <button style = "padding:2px;" type="button" class="btn btn-success btn-sm historial-pago" data-credito="' + registro.credito + '">Historial Pago</button>'
+               fila += '   <button style = "padding:2px;" type="button" class="btn btn-success btn-sm plan-pago" data-credito="' + registro.credito + '">Ver Plan Pago</button>'
+               fila += '</td>'
+               fila += '<td>'
+               fila += '<button type="button" class="btn btn-success btn-sm monto-desembolsado" data-credito="' + registro.credito + '">+</button>'
+               fila += '</td>'
+               fila += '</tr>'
+
+               $('#tabla-creditos').append(fila);
+              
+               
+            });
+            Actualizar();
+         }
+
+         //Llenar la tabla de TRANSACCIONES TARJETAS
+         if(data.transacciones_tarjetas != false){
+            $.each(data.transacciones_tarjetas, function( index , registro ) {
+               fila  = '<tr>'
+               fila += '<td> ' + registro.fecha + ' </td>'
+               fila += '<td> ' + registro.hora + ' </td>'
+               fila += '<td> ' + registro.lugar + ' </td>'
+               fila += '<td> ' + numberWithCommas(registro.monto) + ' </td>'
+               fila += '</tr>';
+
+               $('#tabla-transacciones_tarjetas').append(fila)
+            });
+         }
+
+         //Llenar la tabla de PAGOS
+         if(data.pagos != false){
+            $.each(data.pagos, function( index , registro ) {
+               fila  = '<tr>'
+               fila += '<td> ' + registro.credito + ' </td>'
+               fila += '<td> ' + registro.sucursal + ' </td>'
+               fila += '<td> ' + registro.fecha + ' </td>'
+               fila += '<td> ' + numberWithCommas(registro.capital) + ' </td>'
+               fila += '<td> ' + numberWithCommas(registro.intereses) + ' </td>'
+               fila += '<td> ' + numberWithCommas(registro.capital_vencido) + ' </td>'
+               fila += '<td> ' + numberWithCommas(registro.recargo2) + ' </td>'
+               fila += '<td> ' + numberWithCommas(registro.otros) + ' </td>'
+               fila += '<td> ' + numberWithCommas(registro.total) + ' </td>'
+               fila += '<td> ' + numberWithCommas(registro.tipo_pago) + ' </td>'
+               fila += '</tr>';
+
+               $('#tabla-pago').append(fila)
+            });
+         }
+
+         //Llenar la tabla de gestiones de cliente
+         if(data.gestiones_cliente != false){
+            $.each(data.gestiones_cliente, function( index , registro ) {
+               if ( registro.agente__username != null ) { usuario =  registro.agente__username  } else { usuario = registro.nombre_gestor }
+               fila  = '<tr>'
+               fila += '<td> ' + registro.tipo_gestion__descripcion + ' </td>'
+               fila += '<td> ' + usuario + ' </td>'
+               fila += '<td> ' + registro.inicio + ' </td>'
+               fila += '<td> ' + registro.hora_inicio + ' </td>'
+               fila += '<td> ' + registro.resultado_gestion__descripcion + ' </td>'
+               fila += '<td width="500px"> ' + registro.observaciones + ' </td>'
+               fila += '</tr>';
+
+               $('#tabla-gestiones').append(fila)
+            });
+         }
+
+
+         //Llenar la tabla de PROMESA DE PAGO
+         if(data.promesa_pago != false){
+            $.each(data.promesa_pago, function( index , registro ) {
+               if(registro.agente__username == null){
+                  agente = registro.nombre_agente;
+               }else{
+                  agente = registro.agente__username;
+               }
+               fila  = '<tr>'
+               fila += '<td> ' + agente.toUpperCase() + ' </td>'
+               fila += '<td> ' + registro.fecha_gestion + ' </td>'
+               fila += '<td> ' + registro.hora_gestion + ' </td>'
+               fila += '<td> ' + registro.estado + ' </td>'
+               fila += '<td> ' + registro.fecha_promesa + ' </td>'
+               fila += '<td> ' + registro.monto_promesa + ' </td>'
+               fila += '</tr>';
+
+               $('#tabla-promesa').append(fila)
+            });
+         }
+          if(data.tarjetas != false){
+            console.log('laksdjaslkdalsdasd', data.tarjetas)
+            $.each(data.tarjetas, function( index , registro ) {
+               fila  = '<tr>'
+               fila += '<td> </td>'
+               fila += '<td> ' + registro.NumeroTarjeta + ' </td>'
+               fila += '<td> ' + registro.CodigoBin + ' </td>'
+               fila += '<td> ' + registro.DescripcionBin + ' </td>'
+               fila += '<td> ' + registro.EstadoTarjeta + ' </td>'
+               fila += '<td> ' + registro.fechaProximoPago + ' </td>'
+               fila += '<td> ' + registro.LimiteCreditoHNL + ' </td>'
+               fila += '<td> ' + registro.SaldoAlCorteHNL + ' </td>'
+               fila += '<td> ' + registro.SaldoActualHN + ' </td>'
+               fila += '</tr>';
+
+               $('#tabla-tarjetas').append(fila)
+            });
+
+         }
+         $('.loader').hide()
+      })
+   });
+
+$( document ).ready(function() {
+    var historial = document.getElementsByClassName("historial-pago");
+
+    var plan = document.getElementsByClassName("plan-pago");
+
+});
+</script>
